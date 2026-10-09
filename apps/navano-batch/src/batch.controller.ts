@@ -10,7 +10,7 @@ export class BatchController {
 
 	@Timeout(1000)
 	handleTimeOut() {
-		this.logger.debug('BATCH SERVER READY!');
+		this.logger.debug('NAVANO BATCH SERVER READY!');
 	}
 
 	@Cron('00 00 01 * * *', { name: BATCH_ROLLBACK })
