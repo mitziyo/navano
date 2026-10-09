@@ -57,14 +57,13 @@ Navano is a multi-store marketplace for **flowers, chocolates and cakes**. It ke
 |---|---|
 | `Property`, `Properties`, `PropertyInput`, `PropertyUpdate` | `Product`, `Products`, `ProductInput`, `ProductUpdate` |
 | `PropertiesInquiry`, `AgentPropertiesInquiry`, `AllPropertiesInquiry` | `ProductsInquiry`, `StoreProductsInquiry`, `AllProductsInquiry` |
-| `PropertyType` | `ProductCollection` (`FLOWER`, `CHOCOLATE`, `CAKE`) |
-| `PropertyStatus` (`ACTIVE`, `SOLD`, `DELETE`) | `ProductStatus` (`ACTIVE`, `PAUSE`, `SOLD`, `DELETE`) |
-| `PropertyLocation` | `ProductLocation` (same values) |
-| (new) | `ProductSize` (`SMALL`, `MEDIUM`, `LARGE`) |
+| `PropertyType` (`APARTMENT`, `VILLA`, `HOUSE`) | `ProductType` (`FLOWER`, `CHOCOLATE`, `CAKE`) |
+| `PropertyStatus` (`ACTIVE`, `SOLD`, `DELETE`) | `ProductStatus` (`HOLD`, `ACTIVE`, `SOLD`, `DELETE`) |
+| `PropertyLocation` | `ProductLocation` (same Korean city values) |
 | `MemberType.AGENT` | `MemberType.STORE` |
 | `AgentsInquiry`, `availableAgentSorts` | `StoresInquiry`, `availableStoreSorts` |
 | `availablePropertySorts` | `availableProductSorts` |
-| `availableOptions = ['propertyBarter','propertyRent']` | `['productSale','productCustomizable']` |
+| `availableOptions = ['propertyBarter','propertyRent']` | removed (the data model has no boolean options) |
 | `PropertyService.propertyStatsEditor` | `ProductService.productStatsEditor` |
 | `BATCH_TOP_PROPERTIES`, `BATCH_TOP_AGENTS` | `BATCH_TOP_PRODUCTS`, `BATCH_TOP_STORES` |
 
@@ -103,40 +102,43 @@ Phase 1 kept every GraphQL operation, type and enum unchanged.
 | Mutation | `updatePropertyByAdmin` | `updateProductByAdmin` | `@Roles(ADMIN)` |
 | Mutation | `removePropertyByAdmin` | `removeProductByAdmin` | `@Roles(ADMIN)` |
 | Query | `getAgents` | `getStores` | `WithoutGuard` |
-| Enum | `PropertyType`, `PropertyStatus`, `PropertyLocation` | `ProductCollection`, `ProductStatus`, `ProductLocation` | — |
+| Enum | `PropertyType`, `PropertyStatus`, `PropertyLocation` | `ProductType`, `ProductStatus`, `ProductLocation` | — |
 | Enum value | `MemberType.AGENT`; `LikeGroup` / `ViewGroup` / `CommentGroup` / `NotificationGroup.PROPERTY` | `STORE`; `PRODUCT` | — |
-| Input search | `typeList`, `roomsList`, `bedsList`, `squaresRange` | `collectionList`, `sizeList` (`squaresRange` removed) | — |
+| Input search | `typeList`, `roomsList`, `bedsList`, `squaresRange`, `options` | `typeList` kept; `roomsList`, `bedsList`, `squaresRange`, `options` removed | — |
+| Input | `PropertyInput` | `ProductInput` gets `productItemCount: Int`; no square/beds/rooms/barter/rent/constructedAt | — |
+| Member type | `Member` | adds `memberAddress: String` (nullable); `memberProperties` → `memberProducts` | — |
 
 ## 7. MongoDB collection and schema changes (Phase 2)
 
 | Collection | Change |
 |---|---|
 | `properties` | Replaced by `products` |
-| `member` | `memberType: 'AGENT'` → `'STORE'`, `memberProperties` → `memberProducts` |
+| `member` | `memberType: 'AGENT'` → `'STORE'`, `memberProperties` → `memberProducts`, new optional `memberAddress` (string) |
 | `likes`, `views`, `comments` | `likeGroup` / `viewGroup` / `commentGroup` value `PROPERTY` → `PRODUCT` |
 | `notifications` | `propertyId` (ref `Property`) → `productId` (ref `Product`), group `PRODUCT` |
 | `boardArticles`, `follows`, `notices` | Unchanged |
 
 ### `Property` → `Product` field mapping
 
-| Property field | Product field | Note |
-|---|---|---|
-| `propertyType` | `productCollection` | FLOWER / CHOCOLATE / CAKE |
-| `propertyStatus` | `productStatus` | adds `PAUSE` |
-| `propertyLocation` | `productLocation` | delivery area |
-| `propertyAddress` | `productAddress` | store pickup address |
-| `propertyTitle` | `productTitle` | |
-| `propertyPrice` | `productPrice` | |
-| `propertySquare`, `propertyBeds`, `propertyRooms` | removed | |
-| (new) | `productSize` | `SMALL` / `MEDIUM` / `LARGE` |
-| (new) | `productStock` | Number, default 0 |
-| `propertyBarter` | `productSale` | Boolean, discount flag |
-| `propertyRent` | `productCustomizable` | Boolean, custom text or decoration |
-| `propertyViews/Likes/Comments/Rank` | `productViews/Likes/Comments/Rank` | |
-| `propertyImages`, `propertyDesc` | `productImages`, `productDesc` | |
-| `memberId`, `soldAt`, `deletedAt` | same | |
-| `constructedAt` | removed | |
-| unique index `{type, location, title, price}` | `{productCollection, productLocation, productTitle, productPrice, memberId}` | |
+Source of truth: the Datensen data model export `D:\MiT\MOD2\navanoo.pdf`. The diagram shows field names and types but not enum values. The enum values below were confirmed by the user on 2026-10-09.
+
+| Property field | Product field | Type | Note |
+|---|---|---|---|
+| `propertyType` | `productType` | enum, NN | `FLOWER` / `CHOCOLATE` / `CAKE` |
+| `propertyStatus` | `productStatus` | enum, NN | `HOLD` / `ACTIVE` / `SOLD` / `DELETE` (adds `HOLD`, default `ACTIVE`) |
+| `propertyLocation` | `productLocation` | enum, NN | same Korean city values |
+| `propertyAddress` | `productAddress` | string, NN | |
+| `propertyTitle` | `productTitle` | string, NN | |
+| `propertyPrice` | `productPrice` | double, NN | |
+| (new) | `productItemCount` | int, NN | number of items available |
+| `propertyViews/Likes/Comments/Rank` | `productViews/Likes/Comments/Rank` | int, NN | |
+| `propertyImages` | `productImages` | array, NN | |
+| `propertyDesc` | `productDesc` | string | |
+| `memberId`, `soldAt`, `deletedAt` | same | objectId NN, date, date | |
+| `propertySquare`, `propertyBeds`, `propertyRooms` | removed | | |
+| `propertyBarter`, `propertyRent` | removed | | |
+| `constructedAt` | removed | | still in the diagram, removal confirmed by the user |
+| unique index `{type, location, title, price}` | `{productType, productLocation, productTitle, productPrice}` | | |
 
 ## 8. Compatibility notes
 

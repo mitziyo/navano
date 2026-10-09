@@ -10,10 +10,12 @@ Format: Decision / Why / Risks / Alternatives considered. Status shows whether t
 | D4 | Use `git mv` for folder renames | Applied |
 | D5 | Keep `.env` DB name `/Nestar` | Applied |
 | D6 | Do not auto-fix lint during the rename | Applied |
-| D7 | One `Product` entity with `productCollection` | Planned (Phase 2) |
+| D7 | One `Product` entity with `productType` | Planned (Phase 2) |
 | D8 | `AGENT` → `STORE` (multi-store marketplace) | Planned (Phase 2) |
 | D9 | Defer Order/Cart to Phase 3 | Agreed |
 | D10 | Use a fresh dev DB for Phase 2 instead of migrating data | Recommended |
+| D11 | `navanoo.pdf` data model is the schema source of truth | Agreed |
+| D11 | `navanoo.pdf` data model is the schema source of truth | Agreed |
 
 ---
 
@@ -47,7 +49,7 @@ Format: Decision / Why / Risks / Alternatives considered. Status shows whether t
 - **Risks:** Lint debt remains.
 - **Alternatives:** A separate "chore: lint fix" commit. Recommended as its own task.
 
-### D7. One `Product` entity with `productCollection` (FLOWER / CHOCOLATE / CAKE)
+### D7. One `Product` entity with `productType` (FLOWER / CHOCOLATE / CAKE)
 - **Why:** All three categories share the same lifecycle: listing, price, images, likes, views, comments and rank. One schema reuses all existing aggregation, like/view and batch logic.
 - **Risks:** Category-specific attributes (cake weight, flower stem count) do not fit into common fields. A later `productAttributes` sub-document or a discriminator may be needed.
 - **Alternatives:** Three separate modules/collections. Rejected because they triplicate code, favorites/visited lookups and batch jobs. Mongoose discriminators are deferred until category-specific fields are real.
@@ -66,3 +68,8 @@ Format: Decision / Why / Risks / Alternatives considered. Status shows whether t
 - **Why:** The current data is real estate demo data with no value for Navano. A migration script would cost more than seeding.
 - **Risks:** Dev accounts need to be re-created.
 - **Alternatives:** A Mongo migration script to rename the collection and fields and map `AGENT` → `STORE`. Use it only if the data must be kept.
+
+### D11. The data model diagram (`navanoo.pdf`) is the schema source of truth
+- **Why:** The user designed the Navano schema in Datensen (`D:\MiT\MOD2\navanoo.pdf`). The earlier draft fields (`productCollection`, `productSize`, `productStock`, `productSale`, `productCustomizable`) are replaced by the diagram's fields: `productType`, `productItemCount`, and `memberAddress` on members. Enum values the diagram does not show were confirmed by the user: status `HOLD/ACTIVE/SOLD/DELETE`, Korean city locations, `constructedAt` removed.
+- **Risks:** `navano.dmm` (saved in 2024) is the old Nestar model and does not match the PDF. If the diagram changes again, the docs must be re-synced by hand.
+- **Alternatives:** Keep the earlier draft. Rejected because the user's model takes priority.

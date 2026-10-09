@@ -6,7 +6,7 @@
 - Found pre-existing bugs (not fixed yet, see `NEXT_STEPS.md`).
 
 ## 2. Phase 2 domain design (agreed, not implemented)
-- Property → Product with `productCollection` FLOWER / CHOCOLATE / CAKE.
+- Property → Product with `productType` FLOWER / CHOCOLATE / CAKE, `productStatus` HOLD/ACTIVE/SOLD/DELETE, `productItemCount`, `memberAddress` (per `navanoo.pdf`, see DECISIONS D11).
 - AGENT → STORE.
 - Order/Cart deferred.
 - Full mapping in `BACKEND_MIGRATION.md` §4.2 and §5 to §7.

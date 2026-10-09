@@ -12,11 +12,11 @@ Repository: `D:\MiT\MOD2\navano-client`. Stack: Next.js 14 (pages router), Apoll
 | 2 | F1 | Baseline: run `npm run build` and `npm run lint` and record the results | — |
 | 3 | F2 | Enums: `property.enum.ts` → `product.enum.ts`. `MemberType.AGENT` → `STORE`. `PROPERTY` → `PRODUCT` in like/view/comment/notification enums | `libs/enums/*` |
 | 4 | F2 | Types: `libs/types/property/*` → `libs/types/product/*` (field mapping as in `BACKEND_MIGRATION.md` §7). Update `member.ts` (`memberProducts`) | `libs/types/*` |
-| 5 | F2 | Config: `availableOptions` → `['productSale','productCustomizable']`. Remove `propertyYears` and `propertySquare`. Add size/collection lists | `libs/config.ts` |
+| 5 | F2 | Config: remove `availableOptions`, `propertyYears` and `propertySquare`. Add the product type list (`FLOWER`, `CHOCOLATE`, `CAKE`) | `libs/config.ts` |
 | 6 | F2 | Apollo operations: rename and update selection sets (table below) | `apollo/user/*.ts`, `apollo/admin/*.ts` |
 | 7 | F3 | Pages: rename routes (table below) and update imports and router links | `pages/**` |
 | 8 | F3 | Components: rename and remodel cards, filters and forms | `libs/components/**` |
-| 9 | F3 | Filter UI: replace rooms/beds/square/year filters with collection, size and price filters, plus Sale/Customizable options | `libs/components/property/Filter.tsx`, `homepage/HeaderFilter.tsx` |
+| 9 | F3 | Filter UI: remove the rooms/beds/square/year filters and the Barter/Rent options. Keep the type (Flower/Chocolate/Cake), location and price filters | `libs/components/property/Filter.tsx`, `homepage/HeaderFilter.tsx` |
 | 10 | F4 | i18n: update keys and values in `en`, `kr`, `ru` | `public/locales/*/common.json` |
 | 11 | F4 | Admin panel: products list and store users | `pages/_admin/**`, `libs/components/admin/**` |
 | 12 | F4 | Verify: `npm run build`, run a manual smoke test against the local `navano-api` | — |
@@ -69,7 +69,7 @@ Repository: `D:\MiT\MOD2\navano-client`. Stack: Next.js 14 (pages router), Apoll
 | all | `memberProperties` field | `memberProducts` |
 | unchanged | `SIGN_UP`, `LOGIN`, `UPDATE_MEMBER`, `LIKE_TARGET_MEMBER`, board-article, comment, follow ops | — |
 
-Selection sets: replace `propertyType/Square/Beds/Rooms/Barter/Rent/constructedAt` with `productCollection/Size/Stock/Sale/Customizable`. Rename the remaining `property*` fields to `product*`.
+Selection sets: remove `propertySquare/Beds/Rooms/Barter/Rent` and `constructedAt`, then add `productItemCount`. Rename the remaining `property*` fields to `product*` (`propertyType` → `productType`). Member selections get `memberAddress` and `memberProducts`.
 
 ## UI terminology changes
 
@@ -77,12 +77,12 @@ Selection sets: replace `propertyType/Square/Beds/Rooms/Barter/Rent/constructedA
 |---|---|
 | Property / Properties | Product / Products |
 | Agent / Agents | Store / Stores |
-| Property type (Apartment, Villa, House) | Collection (Flowers, Chocolates, Cakes) |
-| Location | Delivery area |
-| Square, Beds, Rooms | Size (Small, Medium, Large), Stock |
-| Barter | On sale |
-| Rent | Customizable |
+| Property type (Apartment, Villa, House) | Product type (Flower, Chocolate, Cake) |
+| Location | Location (same cities) |
+| Square, Beds, Rooms | Item count (`productItemCount`) |
+| Barter, Rent | removed |
 | Year built | removed |
+| Hold (new status) | On hold |
 | Sold | Sold out |
 | Add New Property | Add New Product |
 | My Properties | My Products |
