@@ -6,8 +6,8 @@ import { LikeInput } from '../../libs/dto/like/like.input';
 import { T } from '../../libs/types/common';
 import { Message } from '../../libs/enums/common.enum';
 import type { ObjectId } from 'mongoose';
-import { OrdinaryInquiry } from '../../libs/dto/property/property.input';
-import { Properties } from '../../libs/dto/property/property';
+import { OrdinaryInquiry } from '../../libs/dto/product/product.input';
+import { Products } from '../../libs/dto/product/product';
 import { LikeGroup } from '../../libs/enums/like.enum';
 import { lookupFavorite } from '../../libs/config';
 
@@ -43,12 +43,12 @@ export class LikeService {
 		return result ? [{ memberId: memberId, likeRefId: likeRefId, myFavorite: true }] : [];
 	}
 
-	public async getFavoriteProperties(memberId: ObjectId, inqut: OrdinaryInquiry): Promise<Properties> {
+	public async getFavoriteProducts(memberId: ObjectId, inqut: OrdinaryInquiry): Promise<Products> {
 		const { page, limit } = inqut;
 
-		const match: T = { likeGroup: LikeGroup.PROPERTY, memberId: memberId };
+		const match: T = { likeGroup: LikeGroup.PRODUCT, memberId: memberId };
 
-		// joriy a'zo laykagan propertylarni topib, ularning to'liq ma'lumotini (properties kolleksiyasidan) biriktiradi
+		// joriy a'zo laykagan productlarni topib, ularning to'liq ma'lumotini (products kolleksiyasidan) biriktiradi
 		const data: T = await this.likeModel
 			.aggregate([
 				{ $match: match },
@@ -56,14 +56,14 @@ export class LikeService {
 
 				{
 					$lookup: {
-						from: 'properties',
+						from: 'products',
 						localField: 'likeRefId',
 						foreignField: '_id',
-						as: 'favoriteProperty',
+						as: 'favoriteProduct',
 					},
 				},
 
-				{ $unwind: '$favoriteProperty' },
+				{ $unwind: '$favoriteProduct' },
 
 				{
 					$facet: {
@@ -72,7 +72,7 @@ export class LikeService {
 							{ $limit: limit },
 
 							lookupFavorite,
-							{ $unwind: '$favoriteProperty.memberData' },
+							{ $unwind: '$favoriteProduct.memberData' },
 						],
 						metaCounter: [{ $count: 'total' }],
 					},
@@ -82,10 +82,10 @@ export class LikeService {
 
 		console.log('data', data);
 
-		// natija "like" hujjatlari shaklida keladi, shuning uchun faqat ichidagi propertyni ajratib olamiz
-		const result: Properties = { list: [], metaCounter: data[0].metaCounter };
+		// natija "like" hujjatlari shaklida keladi, shuning uchun faqat ichidagi productni ajratib olamiz
+		const result: Products = { list: [], metaCounter: data[0].metaCounter };
 
-		result.list = data[0].list.map((ele) => ele.favoriteProperty);
+		result.list = data[0].list.map((ele) => ele.favoriteProduct);
 		console.log('result', result);
 
 		return result;

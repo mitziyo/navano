@@ -1,6 +1,6 @@
 # Backend Migration: Nestar → Navano
 
-> Status as of 2026-10-09: **Phase 1 (safe rename layer) is done and committed (`7856ad9`). Phase 2 (domain migration) is designed but not implemented.**
+> Status as of 2026-10-09: **Phase 1 (safe rename layer) is done (`7856ad9`). Phase 2 (Property → Product) is implemented on branch `modification`. `MemberType` stays `USER` / `AGENT` / `ADMIN` (DECISIONS D8).**
 
 ## 1. Original project: Nestar
 
@@ -24,14 +24,14 @@ Navano is a multi-store marketplace for **flowers, chocolates and cakes**. It ke
 | Concept | Nestar | Navano |
 |---|---|---|
 | Listing entity | Property (apartment / villa / house) | Product (flower / chocolate / cake) |
-| Seller role | `AGENT` | `STORE` |
+| Seller role | `AGENT` | `AGENT` (kept, see DECISIONS D8) |
 | Location | Property location (city) | Delivery area (same city enum, kept for now) |
 | Orders | n/a | Deferred to Phase 3 (Order/Cart) |
 
 ## 3. Backend migration goal
 
 1. **Phase 1, safe rename layer (DONE):** rename project and app identifiers. No change to business logic, APIs or DB.
-2. **Phase 2, domain migration (PLANNED):** Property → Product and AGENT → STORE across schema, DTOs, resolvers, services, enums, config and batch.
+2. **Phase 2, domain migration (DONE):** Property → Product across schema, DTOs, resolvers, services, enums, config and batch. `AGENT` is kept.
 3. **Phase 3, commerce (FUTURE):** Order/Cart modules, stock handling and delivery scheduling.
 
 ## 4. Naming changes
@@ -51,21 +51,21 @@ Navano is a multi-store marketplace for **flowers, chocolates and cakes**. It ke
 | `BATCH SERVER READY!` | `NAVANO BATCH SERVER READY!` | `apps/navano-batch/src/batch.controller.ts` |
 | `NestarBatchController (e2e)` | `NavanoBatchController (e2e)` | `apps/navano-batch/test/app.e2e-spec.ts` |
 
-### 4.2 Planned in Phase 2
+### 4.2 Done in Phase 2
 
 | Old | New |
 |---|---|
 | `Property`, `Properties`, `PropertyInput`, `PropertyUpdate` | `Product`, `Products`, `ProductInput`, `ProductUpdate` |
-| `PropertiesInquiry`, `AgentPropertiesInquiry`, `AllPropertiesInquiry` | `ProductsInquiry`, `StoreProductsInquiry`, `AllProductsInquiry` |
+| `PropertiesInquiry`, `AgentPropertiesInquiry`, `AllPropertiesInquiry` | `ProductsInquiry`, `AgentProductsInquiry`, `AllProductsInquiry` |
 | `PropertyType` (`APARTMENT`, `VILLA`, `HOUSE`) | `ProductType` (`FLOWER`, `CHOCOLATE`, `CAKE`) |
 | `PropertyStatus` (`ACTIVE`, `SOLD`, `DELETE`) | `ProductStatus` (`HOLD`, `ACTIVE`, `SOLD`, `DELETE`) |
 | `PropertyLocation` | `ProductLocation` (same Korean city values) |
-| `MemberType.AGENT` | `MemberType.STORE` |
-| `AgentsInquiry`, `availableAgentSorts` | `StoresInquiry`, `availableStoreSorts` |
+| `MemberType.AGENT` | unchanged |
+| `AgentsInquiry`, `availableAgentSorts` | unchanged |
 | `availablePropertySorts` | `availableProductSorts` |
 | `availableOptions = ['propertyBarter','propertyRent']` | removed (the data model has no boolean options) |
 | `PropertyService.propertyStatsEditor` | `ProductService.productStatsEditor` |
-| `BATCH_TOP_PROPERTIES`, `BATCH_TOP_AGENTS` | `BATCH_TOP_PRODUCTS`, `BATCH_TOP_STORES` |
+| `BATCH_TOP_PROPERTIES`, `BATCH_TOP_AGENTS` | `BATCH_TOP_PRODUCTS`, `BATCH_TOP_AGENTS` (unchanged) |
 
 ## 5. Module changes (Phase 2)
 
@@ -73,7 +73,7 @@ Navano is a multi-store marketplace for **flowers, chocolates and cakes**. It ke
 |---|---|
 | `components/property/*` | Move to `components/product/*` (`ProductModule`, `ProductResolver`, `ProductService`). Mongoose model name becomes `'Product'` |
 | `components/components.module.ts` | Import `ProductModule` instead of `PropertyModule` |
-| `components/member/*` | `getAgents` → `getStores`, `MemberType.STORE`, `@Roles(USER, STORE)`, `memberProducts` counter |
+| `components/member/*` | Unchanged except the `memberProducts` counter (`getAgents`, `@Roles(USER, AGENT)` stay) |
 | `components/comment/*` | Inject `ProductService`. `CommentGroup.PRODUCT` updates `productComments` |
 | `components/like/like.service.ts` | `$lookup from: 'products'`, `favoriteProduct` |
 | `components/view/view.service.ts` | `$lookup from: 'products'`, `visitedProduct` |
@@ -81,7 +81,7 @@ Navano is a multi-store marketplace for **flowers, chocolates and cakes**. It ke
 | `libs/dto/property/*` | Move to `libs/dto/product/*` |
 | `libs/enums/property.enum.ts` | Move to `product.enum.ts` |
 | `libs/enums/{like,view,comment,notification}.enum.ts` | `PROPERTY` → `PRODUCT` |
-| `navano-batch` | `Product` model, `batchTopProducts`, `batchTopStores` |
+| `navano-batch` | `Product` model, `batchTopProducts`, `batchTopAgents` (uses `memberProducts`) |
 | Unchanged | `auth`, `follow`, `board-article`, `socket`, `database`, `Logging.interceptor` |
 
 ## 6. GraphQL changes (Phase 2)
@@ -90,20 +90,20 @@ Phase 1 kept every GraphQL operation, type and enum unchanged.
 
 | Kind | Old | New | Guard |
 |---|---|---|---|
-| Mutation | `createProperty` | `createProduct` | `@Roles(STORE)` |
+| Mutation | `createProperty` | `createProduct` | `@Roles(AGENT)` |
 | Query | `getProperty` | `getProduct` | `WithoutGuard` |
-| Mutation | `updateProperty` | `updateProduct` | `@Roles(STORE)` |
+| Mutation | `updateProperty` | `updateProduct` | `@Roles(AGENT)` |
 | Query | `getProperties` | `getProducts` | `WithoutGuard` |
 | Query | `getFavorites` | `getFavorites` (returns `Products`) | `AuthGuard` |
 | Query | `getVisited` | `getVisited` (returns `Products`) | `AuthGuard` |
-| Query | `getAgentProperties` | `getStoreProducts` | `@Roles(STORE)` |
+| Query | `getAgentProperties` | `getAgentProducts` | `@Roles(AGENT)` |
 | Mutation | `likeTargetProperty` | `likeTargetProduct` | `AuthGuard` |
 | Query | `getAllPropertiesByAdmin` | `getAllProductsByAdmin` | `@Roles(ADMIN)` |
 | Mutation | `updatePropertyByAdmin` | `updateProductByAdmin` | `@Roles(ADMIN)` |
 | Mutation | `removePropertyByAdmin` | `removeProductByAdmin` | `@Roles(ADMIN)` |
-| Query | `getAgents` | `getStores` | `WithoutGuard` |
+| Query | `getAgents` | `getAgents` (unchanged) | `WithoutGuard` |
 | Enum | `PropertyType`, `PropertyStatus`, `PropertyLocation` | `ProductType`, `ProductStatus`, `ProductLocation` | — |
-| Enum value | `MemberType.AGENT`; `LikeGroup` / `ViewGroup` / `CommentGroup` / `NotificationGroup.PROPERTY` | `STORE`; `PRODUCT` | — |
+| Enum value | `LikeGroup` / `ViewGroup` / `CommentGroup` / `NotificationGroup.PROPERTY` | `PRODUCT` (`MemberType.AGENT` unchanged) | — |
 | Input search | `typeList`, `roomsList`, `bedsList`, `squaresRange`, `options` | `typeList` kept; `roomsList`, `bedsList`, `squaresRange`, `options` removed | — |
 | Input | `PropertyInput` | `ProductInput` gets `productItemCount: Int`; no square/beds/rooms/barter/rent/constructedAt | — |
 | Member type | `Member` | adds `memberAddress: String` (nullable); `memberProperties` → `memberProducts` | — |
@@ -113,7 +113,7 @@ Phase 1 kept every GraphQL operation, type and enum unchanged.
 | Collection | Change |
 |---|---|
 | `properties` | Replaced by `products` |
-| `member` | `memberType: 'AGENT'` → `'STORE'`, `memberProperties` → `memberProducts`, new optional `memberAddress` (string) |
+| `member` | `memberProperties` → `memberProducts`, new optional `memberAddress` (string). `memberType` values unchanged |
 | `likes`, `views`, `comments` | `likeGroup` / `viewGroup` / `commentGroup` value `PROPERTY` → `PRODUCT` |
 | `notifications` | `propertyId` (ref `Property`) → `productId` (ref `Product`), group `PRODUCT` |
 | `boardArticles`, `follows`, `notices` | Unchanged |
@@ -148,9 +148,11 @@ Source of truth: the Datensen data model export `D:\MiT\MOD2\navanoo.pdf`. The d
   - The GraphQL schema changes, so `navano-client` must migrate in the same release (see `FRONTEND_MIGRATION.md`).
   - Existing `properties` documents and `AGENT` members do not match the new schema. Use a fresh dev DB (recommended) or a one-off migration script.
 - **Uploads:** image paths are stored as `uploads/property/<uuid>.<ext>`. New uploads should go to `uploads/product/`. Old files stay readable through the static `/uploads` route.
-- **Known pre-existing bugs** (fix during Phase 2):
+- **Known pre-existing bugs** (fixed in Phase 2):
   - `batch.service.ts` `batchRollback` filters with `MemberType:` instead of `memberType:`.
   - `batchTopProperties` calls `findOneAndUpdate(_id, …)` instead of `findByIdAndUpdate`.
   - `property.input.ts` types `propertyAddress` / `propertyTitle` as `PropertyType` instead of `string`.
   - `board-article.resolver.ts:40` logs `getProperty`.
+  - `updateProperty` / `updatePropertyByAdmin` computed `soldAt` / `deletedAt` but never wrote them to the update, so they were never stored.
+  - `memberAddress` existed in the member DTOs but not in `Member.model.ts`, so Mongoose dropped it.
 - **Lint baseline:** `npx eslint "apps/**/*.ts"` reports 397 problems (371 errors, 26 warnings) before and after Phase 1. They come from the existing code, not the rename.

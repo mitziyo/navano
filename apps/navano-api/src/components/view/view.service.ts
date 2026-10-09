@@ -6,8 +6,8 @@ import { ViewInput } from '../../libs/dto/view/view.input';
 import { T } from '../../libs/types/common';
 import type { ObjectId } from 'mongoose';
 import { lookupVisit } from '../../libs/config';
-import { Properties } from '../../libs/dto/property/property';
-import { OrdinaryInquiry } from '../../libs/dto/property/property.input';
+import { Products } from '../../libs/dto/product/product';
+import { OrdinaryInquiry } from '../../libs/dto/product/product.input';
 import { ViewGroup } from '../../libs/enums/view.enum';
 
 @Injectable()
@@ -31,12 +31,12 @@ export class ViewService {
 		return await this.viewModel.findOne(search).exec();
 	}
 
-	public async getVisitedProperties(memberId: ObjectId, inqut: OrdinaryInquiry): Promise<Properties> {
+	public async getVisitedProducts(memberId: ObjectId, inqut: OrdinaryInquiry): Promise<Products> {
 		const { page, limit } = inqut;
 
-		const match: T = { viewGroup: ViewGroup.PROPERTY, memberId: memberId };
+		const match: T = { viewGroup: ViewGroup.PRODUCT, memberId: memberId };
 
-		// joriy a'zo ko'rgan propertylarni topib, ularning to'liq ma'lumotini (properties kolleksiyasidan) biriktiradi
+		// joriy a'zo ko'rgan productlarni topib, ularning to'liq ma'lumotini (products kolleksiyasidan) biriktiradi
 		const data: T = await this.viewModel
 			.aggregate([
 				{ $match: match },
@@ -44,14 +44,14 @@ export class ViewService {
 
 				{
 					$lookup: {
-						from: 'properties',
+						from: 'products',
 						localField: 'viewRefId',
 						foreignField: '_id',
-						as: 'visitedProperty',
+						as: 'visitedProduct',
 					},
 				},
 
-				{ $unwind: '$visitedProperty' },
+				{ $unwind: '$visitedProduct' },
 
 				{
 					$facet: {
@@ -60,7 +60,7 @@ export class ViewService {
 							{ $limit: limit },
 
 							lookupVisit,
-							{ $unwind: '$visitedProperty.memberData' },
+							{ $unwind: '$visitedProduct.memberData' },
 						],
 						metaCounter: [{ $count: 'total' }],
 					},
@@ -70,10 +70,10 @@ export class ViewService {
 
 		console.log('data', data);
 
-		// natija "view" hujjatlari shaklida keladi, shuning uchun faqat ichidagi propertyni ajratib olamiz
-		const result: Properties = { list: [], metaCounter: data[0].metaCounter };
+		// natija "view" hujjatlari shaklida keladi, shuning uchun faqat ichidagi productni ajratib olamiz
+		const result: Products = { list: [], metaCounter: data[0].metaCounter };
 
-		result.list = data[0].list.map((ele: T) => ele.visitedProperty);
+		result.list = data[0].list.map((ele: T) => ele.visitedProduct);
 		console.log('result', result);
 
 		return result;

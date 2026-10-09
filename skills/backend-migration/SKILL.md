@@ -12,7 +12,7 @@ Use this skill when changing backend code for the Navano product migration.
 1. Search for affected property/product references before editing.
 2. Preserve the resolver/service/module structure already used by `navano-api`.
 3. Keep DTOs, enums, and schemas in their existing folders.
-4. Keep `MemberType.USER | STORE | ADMIN` unchanged.
+4. Keep `MemberType.USER | AGENT | ADMIN` unchanged (no `STORE` rename, see DECISIONS D8).
 5. Use product terminology for catalog behavior and database lookups.
 6. Update social modules consistently when product counters, likes, views, comments, or notifications are involved.
 7. Update batch logic when product ranking or `memberProducts` affects rank calculations.

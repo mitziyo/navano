@@ -48,11 +48,15 @@ const MemberSchema = new Schema(
 			default: '',
 		},
 
+		memberAddress: {
+			type: String,
+		},
+
 		memberDesc: {
 			type: String,
 		},
 
-		memberProperties: {
+		memberProducts: {
 			type: Number,
 			default: 0,
 		},
@@ -101,7 +105,7 @@ const MemberSchema = new Schema(
 			type: Date,
 		},
 	},
-	{ timestamps: true, collection: 'member' },
+	{ timestamps: true, collection: 'members' },
 );
 
 export default MemberSchema;

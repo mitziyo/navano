@@ -3,16 +3,12 @@
 ## Backend cleanup
 | # | Task | Notes |
 |---|---|---|
-| 1 | Commit `docs/` on branch `modification` | Phase 1 rename is already committed (`7856ad9`) |
-| 2 | Runtime smoke test | `npm run start:dev` → `GET /` returns "Welcome to Navano API Server!", the playground loads. `npm run start:dev:batch` logs "NAVANO BATCH SERVER READY!" |
-| 3 | Fix the known bugs | `batch.service.ts`: `MemberType:` → `memberType:`, and `findOneAndUpdate(_id, …)` → `findByIdAndUpdate`. `property.input.ts`: `propertyAddress/Title` typed `string`. `board-article.resolver.ts:40` log text |
-| 4 | Phase 2a: enums + schema + DTOs | `product.enum.ts` (`ProductType`, `ProductStatus` with `HOLD`), `Product.model.ts` (`productItemCount`), `memberAddress`, `libs/dto/product/*`, `MemberType.STORE`, group enums `PRODUCT` |
-| 5 | Phase 2b: product module | `components/product/*`, `components.module.ts`, `comment` / `like` / `view` couplings, `libs/config.ts` |
-| 6 | Phase 2c: member | `getStores`, `StoresInquiry`, `memberProducts`, `@Roles` updates |
-| 7 | Phase 2d: batch | `BATCH_TOP_PRODUCTS`, `BATCH_TOP_STORES`, `Product` model |
-| 8 | Database | New dev DB name (e.g. `navano`) in `.env`, then seed STORE members and products |
-| 9 | `grep -rni "propert\|agent"` clean-up | Includes comments (several Uzbek comments mention "property") |
-| 10 | Separate lint-fix commit | 397 pre-existing problems. Review `eslint --fix` output on its own |
+| 1 | Commit the Phase 2 Property → Product changes on branch `modification` | Done in the working tree, validated (tsc, build, lint 397, unit tests) |
+| 2 | Runtime smoke test | `npm run start:dev` → `GET /` returns "Welcome to Navano API Server!", the playground loads. Run `createProduct` (AGENT), `getProducts(typeList: [FLOWER])`, `likeTargetProduct`, `getFavorites`, `createComment(PRODUCT)`. `npm run start:dev:batch` logs "NAVANO BATCH SERVER READY!" |
+| 3 | Database | New dev DB name (e.g. `navano`) in `.env`, then seed AGENT members and products. Old `properties` documents do not match the new schema |
+| 4 | Re-export `navanoo.pdf` | `D:\MiT\MOD2\navanoo.dmm` now matches the code (`products`, `productItemCount`, `notifications.productId`, `memberProducts`, no `constructedAt`). Open it in Datensen and export it over `navanoo.pdf` |
+| 5 | Jest and `uuid` | `uuid` is ESM-only, so specs that import `libs/config.ts` must `jest.mock('uuid')` (see `product.service.spec.ts`), or add a Jest `transformIgnorePatterns` / `moduleNameMapper` fix |
+| 6 | Separate lint-fix commit | 397 pre-existing problems. Review `eslint --fix` output on its own |
 
 ## Frontend migration (`navano-client`)
 | # | Task |
@@ -27,15 +23,15 @@
 | # | Task |
 |---|---|
 | 1 | Add e2e for `GET /` and the GraphQL health of both apps (`apps/*/test/app.e2e-spec.ts` currently uses the Nest starter) |
-| 2 | E2e flow: signup STORE → createProduct → getProducts (typeList) → USER likeTargetProduct → getFavorites → createComment (PRODUCT) → `productComments` increments |
+| 2 | E2e flow: signup AGENT → createProduct → getProducts (typeList) → USER likeTargetProduct → getFavorites → createComment (PRODUCT) → `productComments` increments |
 | 3 | Batch: unit-test the rank formulas (`likes*2 + views`, store formula) |
 | 4 | WebSocket chat connect with and without token |
 
 ## Documentation
 | # | Task |
 |---|---|
-| 1 | Update `docs/BACKEND_MIGRATION.md` statuses after each phase |
-| 2 | Fill in `SKILLS.md` (currently only a heading) and extend `AGENTS.md` with the domain glossary (Product, Store, ProductType) |
+| 1 | Update `docs/ai/BACKEND_MIGRATION.md` statuses after each phase |
+| 2 | Extend `AGENTS.md` with the domain glossary (Product, Agent, ProductType) |
 | 3 | Document the GraphQL API (generated schema snapshot or an op list) for the frontend |
 
 ## Security

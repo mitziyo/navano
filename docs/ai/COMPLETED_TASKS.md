@@ -47,3 +47,31 @@ Not changed on purpose: GraphQL API, enums, `BATCH_*` constant values, Mongo col
 
 ## 5. Documentation
 - Created `docs/` with: `BACKEND_MIGRATION.md`, `DECISIONS.md`, `FRONTEND_MIGRATION.md`, `COMPLETED_TASKS.md`, `NEXT_STEPS.md`, `PROMPTS.md`. No source code changed.
+
+## 6. Phase 2: Property → Product (done in the working tree on branch `modification`)
+
+Decision: `MemberType` stays `USER` / `AGENT` / `ADMIN` (DECISIONS D8). Schema follows `navanoo.pdf` (D11).
+
+| Area | Change |
+|---|---|
+| Moves (`git mv`) | `property.enum.ts` → `product.enum.ts`, `Property.model.ts` → `Product.model.ts`, `libs/dto/property/*` → `libs/dto/product/*`, `components/property/*` → `components/product/*` |
+| Enums | `ProductType` `FLOWER/CHOCOLATE/CAKE`, `ProductStatus` `HOLD/ACTIVE/SOLD/DELETE`, `ProductLocation`. `Like/View/Comment/NotificationGroup.PROPERTY` → `PRODUCT` |
+| Schema | `Product` model, collection `products`, `productItemCount` added. Removed square/beds/rooms/barter/rent/`constructedAt`. Unique index on `productType/Location/Title/Price`. `Member`: `memberProducts`, `memberAddress` added to the schema. `Notification`: `productId` (ref `Product`) |
+| DTOs | `Product`, `Products`, `ProductInput`, `ProductUpdate`, `ProductsInquiry`, `AgentProductsInquiry`, `AllProductsInquiry`. Removed `SquaresRange`, `roomsList`, `bedsList`, `options` |
+| GraphQL | `createProduct`, `getProduct(productId)`, `updateProduct`, `getProducts`, `getAgentProducts`, `likeTargetProduct(productId)`, `getAllProductsByAdmin`, `updateProductByAdmin`, `removeProductByAdmin`. `getFavorites` / `getVisited` return `Products` |
+| Couplings | `components.module.ts`, `comment.*` (`productStatsEditor`, `productComments`), `like.service.ts` (`getFavoriteProducts`), `view.service.ts` (`getVisitedProducts`), `libs/config.ts` (`availableProductSorts`, `favoriteProduct` / `visitedProduct` lookups; `availableOptions` removed) |
+| Batch | `Product` model, `batchTopProducts`, `BATCH_TOP_PRODUCTS`; `batchTopAgents` uses `memberProducts` |
+| Bug fixes | batch `MemberType:` → `memberType:`; `findOneAndUpdate(_id…)` → `findByIdAndUpdate`; `productAddress/Title` typed `string`; board-article log text; `soldAt` / `deletedAt` now saved on update; `memberAddress` now persisted |
+| Tests | `components/product/product.service.spec.ts`: `shapeMatchQuery`, `getAgentProducts` DELETE guard, `updateProduct` SOLD flow |
+| Docs | `AGENTS.md`, `skills/backend-migration/SKILL.md`, `DECISIONS.md` (D8 rewritten, duplicate D11 removed), `BACKEND_MIGRATION.md`, `NEXT_STEPS.md` |
+
+### Validation
+
+| Check | Result |
+|---|---|
+| `npx tsc --noEmit` api / batch | 0 errors / 0 errors |
+| `npx nest build navano-api` / `navano-batch` | success / success |
+| `npx eslint "apps/**/*.ts"` | 397 (371 errors, 26 warnings), same as the baseline |
+| `npx jest apps/navano-api/src/components/product` | 3 passed |
+| `grep -rniE "propert" apps --include=*.ts` | 0 |
+| Runtime smoke test | not run |

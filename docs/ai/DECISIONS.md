@@ -10,11 +10,10 @@ Format: Decision / Why / Risks / Alternatives considered. Status shows whether t
 | D4 | Use `git mv` for folder renames | Applied |
 | D5 | Keep `.env` DB name `/Nestar` | Applied |
 | D6 | Do not auto-fix lint during the rename | Applied |
-| D7 | One `Product` entity with `productType` | Planned (Phase 2) |
-| D8 | `AGENT` → `STORE` (multi-store marketplace) | Planned (Phase 2) |
+| D7 | One `Product` entity with `productType` | Applied (Phase 2) |
+| D8 | Keep `MemberType.AGENT` (the `STORE` rename is dropped) | Applied (Phase 2) |
 | D9 | Defer Order/Cart to Phase 3 | Agreed |
 | D10 | Use a fresh dev DB for Phase 2 instead of migrating data | Recommended |
-| D11 | `navanoo.pdf` data model is the schema source of truth | Agreed |
 | D11 | `navanoo.pdf` data model is the schema source of truth | Agreed |
 
 ---
@@ -54,10 +53,10 @@ Format: Decision / Why / Risks / Alternatives considered. Status shows whether t
 - **Risks:** Category-specific attributes (cake weight, flower stem count) do not fit into common fields. A later `productAttributes` sub-document or a discriminator may be needed.
 - **Alternatives:** Three separate modules/collections. Rejected because they triplicate code, favorites/visited lookups and batch jobs. Mongoose discriminators are deferred until category-specific fields are real.
 
-### D8. `AGENT` → `STORE` (multi-store marketplace)
-- **Why:** This matches the existing multi-seller model, where agents list properties. A store is the natural equivalent, so the `@Roles` guards and `memberId` ownership stay as they are.
-- **Risks:** Existing `AGENT` members need data migration. Frontend role checks must change in the same release.
-- **Alternatives:** A single shop with ADMIN-only listing. Rejected because it would drop the seller dashboards and the top-agent ranking.
+### D8. Keep `MemberType.AGENT` (the `STORE` rename is dropped)
+- **Why:** The user decided on 2026-10-09 to keep member types as they are (`USER`, `AGENT`, `ADMIN`). Agents act as the sellers: they own products through `memberId`, and `@Roles(MemberType.AGENT)` guards product creation. Names tied to the member type stay too: `getAgents`, `AgentsInquiry`, `availableAgentSorts`, `batchTopAgents`, `BATCH_TOP_AGENTS`. The agent product listing is `getAgentProducts` / `AgentProductsInquiry`.
+- **Risks:** The label "agent" is a leftover from real estate. A later rename means another breaking change for the API, the DB and the frontend.
+- **Alternatives:** `AGENT` → `STORE` (the earlier plan). Rejected by the user to keep this migration focused on products.
 
 ### D9. Defer Order/Cart to Phase 3
 - **Why:** Keeps Phase 2 a pure domain rename and remodel with a clear verification target. Commerce adds payment, stock reservation and delivery scheduling, which are new concerns.
@@ -71,5 +70,5 @@ Format: Decision / Why / Risks / Alternatives considered. Status shows whether t
 
 ### D11. The data model diagram (`navanoo.pdf`) is the schema source of truth
 - **Why:** The user designed the Navano schema in Datensen (`D:\MiT\MOD2\navanoo.pdf`). The earlier draft fields (`productCollection`, `productSize`, `productStock`, `productSale`, `productCustomizable`) are replaced by the diagram's fields: `productType`, `productItemCount`, and `memberAddress` on members. Enum values the diagram does not show were confirmed by the user: status `HOLD/ACTIVE/SOLD/DELETE`, Korean city locations, `constructedAt` removed.
-- **Risks:** `navano.dmm` (saved in 2024) is the old Nestar model and does not match the PDF. If the diagram changes again, the docs must be re-synced by hand.
+- **Risks:** `navano.dmm` (saved in 2024) is the old Nestar model. `navanoo.dmm` (generated on 2026-10-09 from `navano.dmm`) is the Datensen source that matches the Phase 2 code; `navanoo.pdf` must be re-exported from it. If the diagram changes again, the docs must be re-synced by hand.
 - **Alternatives:** Keep the earlier draft. Rejected because the user's model takes priority.
