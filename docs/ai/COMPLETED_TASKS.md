@@ -7,7 +7,7 @@
 
 ## 2. Phase 2 domain design (agreed, not implemented)
 - Property → Product with `productType` FLOWER / CHOCOLATE / CAKE, `productStatus` HOLD/ACTIVE/SOLD/DELETE, `productItemCount`, `memberAddress` (per `navanoo.pdf`, see DECISIONS D11).
-- AGENT → STORE.
+- AGENT → STORE. (Later dropped: `AGENT` is kept, see DECISIONS D8.)
 - Order/Cart deferred.
 - Full mapping in `BACKEND_MIGRATION.md` §4.2 and §5 to §7.
 
@@ -83,3 +83,44 @@ Decision: `MemberType` stays `USER` / `AGENT` / `ADMIN` (DECISIONS D8). Schema f
 - **Fix:** `lookupMember`, `lookupFollowingData`, `lookupFollowerData`, `lookupFavorite`, `lookupVisit` now use `from: 'members'`.
 - **Test:** `libs/config.spec.ts` checks that every member lookup uses `MemberSchema`'s collection name.
 - **Validation:** tsc api/batch 0 errors, both builds pass, eslint 397 (baseline), jest 4 passed. A read-only DB check showed 2 ACTIVE products survive the join with `members` and 0 with `member`.
+
+## 8. Frontend migration F1–F4 in `navano-client` (2026-10-10)
+
+Done in the working tree on branch `modification` (not committed yet). Plan: `FRONTEND_MIGRATION.md`.
+
+Decision: code, API calls, enums, types, routes and component names keep `AGENT` (D8). Only visible UI text says "Store" / "Stores".
+
+| Phase | Change |
+|---|---|
+| F0 | Baseline: `yarn tsc --noEmit` 0 errors, `yarn build` success. Lint skipped (no ESLint config) |
+| F1 | `package.json` name `navano-client`. "Nestar" text replaced in `_document.tsx` (SEO meta), `Layout{Home,Basic,Full}.tsx`, `Footer.tsx`, `join.tsx`, `community/index.tsx` and mobile placeholders |
+| F2 | `product.enum.ts` (`FLOWER/CHOCOLATE/CAKE`, `HOLD/ACTIVE/SOLD/DELETE`); group enums `PRODUCT`; `libs/types/product/*` per `BACKEND_MIGRATION.md` §7; `memberProducts` in types, JWT payload, `userVar` and auth; `config.ts` drops options/years/square and adds `productTypes`; Apollo ops renamed (`removeProductByAdmin(input)`) |
+| F3 | `git mv` of `pages/property` → `pages/product`, `_admin/properties` → `_admin/products`, product components and SCSS. Cards and detail page show type, location, item count and status. `AddNewProduct` uses Item Count, upload target `product`. `Filter.tsx` and `HeaderFilter.tsx` drop rooms/beds/square/year/options; HeaderFilter advanced modal keeps a price range; type tiles get a fallback colour until the type images exist |
+| F4 | UI text: "Top Stores", "Store", "No Stores found!", join label "Store" (value `AGENT`), footer links. Locales `en/kr/ru`: `Products`, `Product type`, `Product Search`; `Agents` → Stores; `Agent Page` → Store Page; `Rooms` removed. Admin: `HOLD` tab ("On hold"), "Sold out", product list column "STORE", AGENT members shown as "STORE" |
+
+### Validation
+
+| Check | Result |
+|---|---|
+| `yarn tsc --noEmit` | 0 errors |
+| `yarn build` | success (`/product`, `/product/detail`, `/_admin/products`, `/agent`) |
+| Apollo ops vs live `navano-api` schema (`graphql.validate`) | 36 / 36 valid |
+| `grep -rni propert apollo libs pages scss` | only static image paths and the FAQ category |
+| `yarn dev` route smoke test (13 routes) | all 200 |
+| Data flow (list, like, add product) | not testable yet: the UI does not call the API (no `useQuery` / `useMutation`) |
+
+## 9. `navano-client`: API wiring ported from the reference project (2026-10-10)
+
+Source: `D:/MiT/Nestar O'quv/nestar-next` (the finished Nestar client built from the same template). Method: a 3-way merge per file, with base = the original template (`navano-client` `bfbf507`) and reference = the finished file, both run through the same property → product rename. This adds the reference's API code without undoing the Navano migration.
+
+| Area | Change |
+|---|---|
+| Pages wired (`useQuery` / `useMutation`) | home sections (Top/Popular/Trend Products, Top Stores, Community), `/product`, `/product/detail` (data, comments, like), `/agent`, `/agent/detail`, `/mypage` (My Products, Add/Edit Product, Favorites, Recently Visited, Articles, Write Article, Profile), `/member` (products, articles, followers/followings, follow), `/community` list and detail, admin products/users/community |
+| Fixed stubs | `AddNewProduct` create/update, `MyProducts` status/delete, community comments, follow/unfollow, `Teditor` submit, missing `likeProductHandler` in product detail |
+| WebSocket | Reference approach: `apollo/client.ts` keeps `WebSocketLink` with a custom `LoggingWebSocket` (`webSocketImpl`) that stores the socket in `socketVar`; `Chat.tsx` uses it for the chat gateway. This also stops the "Invalid message type!" error. The error link shows GraphQL errors with `sweetErrorAlert` |
+| Styles | chat bubbles (`scss/pc/main.scss`), `RippleBadge`, agent detail spacing |
+| Conflicts resolved by hand | `MyProfile.tsx` (kept the placeholder-image guard), `product/Filter.tsx` (removed real-estate filters stay removed), `_admin/products` (`HOLD` tab kept), `product/index.tsx` |
+| Extra fix | "New" sort on `/product` uses `DESC` (the reference has `ASC`) |
+| Not wired | CS (Notice/FAQ/Inquiry): the backend has no GraphQL API for them |
+
+Validation: `yarn tsc --noEmit` 0 errors; no references to removed real-estate fields; 11 routes return 200 on the dev server. Browser checks of data flows are pending.

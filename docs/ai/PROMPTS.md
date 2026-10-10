@@ -38,10 +38,10 @@ Run: npx tsc --noEmit -p apps/navano-api/tsconfig.app.json, same for navano-batc
 npx eslint "apps/**/*.ts" (no --fix). Compare with baseline 397. Update docs/COMPLETED_TASKS.md.
 ```
 
-### B3. Backend Phase 2: Property → Product, AGENT → STORE
+### B3. Backend Phase 2: Property → Product (AGENT kept, D8)
 ```
 Implement backend Phase 2 exactly as specified in docs/BACKEND_MIGRATION.md §4.2–§7 and docs/DECISIONS.md D7/D8.
-Make a plan first. Steps: enums → schema → DTOs → product module → member (getStores) →
+Make a plan first. Steps: enums → schema → DTOs → product module → member (memberProducts; getAgents stays) →
 comment/like/view couplings → libs/config.ts → batch. Use git mv for renamed files.
 Do not implement Order/Cart. Do not change the .env DB name.
 Validate: tsc for both apps, eslint (no --fix, no increase over 397), nest build for both apps,
@@ -50,8 +50,8 @@ grep -rni "propert\|agent" apps → only intentional hits. Then update docs/*.md
 
 ### B4. Batch migration only
 ```
-Migrate apps/navano-batch to the Product/Store domain: BATCH_TOP_PRODUCTS, BATCH_TOP_STORES,
-the Product model, batchTopProducts and batchTopStores using memberProducts. Keep the cron schedules unchanged.
+Migrate apps/navano-batch to the Product domain: BATCH_TOP_PRODUCTS, BATCH_TOP_AGENTS (unchanged, D8),
+the Product model, batchTopProducts and batchTopAgents using memberProducts. Keep the cron schedules unchanged.
 Run tsc and nest build navano-batch.
 ```
 
@@ -59,15 +59,16 @@ Run tsc and nest build navano-batch.
 ```
 In D:\MiT\MOD2\navano-client: rename package nestar-next → navano-client and replace visible
 "Nestar" branding (titles, meta, header/footer, locales) with "Navano". Do not change GraphQL
-operations, routes or types. Record npm run build / lint before and after. Make a plan first.
+operations, routes or types. Record yarn build / yarn tsc --noEmit before and after. Make a plan first.
 ```
 
 ### B6. Frontend domain migration (F2–F4)
 ```
 Migrate navano-client to the Navano GraphQL schema following docs/FRONTEND_MIGRATION.md
-(enums, types, apollo ops, pages property→product and agent→store, components, filters, i18n en/kr/ru, admin).
-The backend Phase 2 must already be running locally. Make a plan first. Validate with npm run build
-and a manual smoke test of: product list, product detail, like, add product (STORE), admin products.
+(enums, types, apollo ops, pages property→product, components, filters, i18n en/kr/ru, admin).
+Keep AGENT in code and routes (D8); show 'Store' only in UI text.
+The backend Phase 2 must already be running locally. Make a plan first. Validate with yarn build
+and a manual smoke test of: product list, product detail, like, add product (AGENT), admin products.
 ```
 
 ### B7. Validation only
