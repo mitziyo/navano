@@ -106,7 +106,7 @@ export const lookupAuthMemberFollowed = (input: LookupAuthMemberFollowed) => {
 
 export const lookupMember = {
 	$lookup: {
-		from: 'member',
+		from: 'members',
 		localField: 'memberId', // turgan collectiondagi memberId
 		foreignField: '_id',
 		as: 'memberData',
@@ -115,7 +115,7 @@ export const lookupMember = {
 
 export const lookupFollowingData = {
 	$lookup: {
-		from: 'member',
+		from: 'members',
 		localField: 'followingId',
 		foreignField: '_id',
 		as: 'followingData',
@@ -124,7 +124,7 @@ export const lookupFollowingData = {
 
 export const lookupFollowerData = {
 	$lookup: {
-		from: 'member',
+		from: 'members',
 		localField: 'followerId',
 		foreignField: '_id',
 		as: 'followerData',
@@ -133,7 +133,7 @@ export const lookupFollowerData = {
 
 export const lookupFavorite = {
 	$lookup: {
-		from: 'member', // "getFavoriteProducts" natijasidagi productning egasi (agent) ma'lumotini biriktiradi
+		from: 'members', // "getFavoriteProducts" natijasidagi productning egasi (agent) ma'lumotini biriktiradi
 		localField: 'favoriteProduct.memberId',
 		foreignField: '_id',
 		as: 'favoriteProduct.memberData',
@@ -142,7 +142,7 @@ export const lookupFavorite = {
 
 export const lookupVisit = {
 	$lookup: {
-		from: 'member', // "getVisitedProducts" natijasidagi productning egasi (agent) ma'lumotini biriktiradi
+		from: 'members', // "getVisitedProducts" natijasidagi productning egasi (agent) ma'lumotini biriktiradi
 		localField: 'visitedProduct.memberId',
 		foreignField: '_id',
 		as: 'visitedProduct.memberData',

@@ -75,3 +75,11 @@ Decision: `MemberType` stays `USER` / `AGENT` / `ADMIN` (DECISIONS D8). Schema f
 | `npx jest apps/navano-api/src/components/product` | 3 passed |
 | `grep -rniE "propert" apps --include=*.ts` | 0 |
 | Runtime smoke test | not run |
+
+## 7. Fix: member lookups pointed at a missing collection (2026-10-10)
+
+- **Symptom:** `getProducts` returned `list: []` with `metaCounter.total: 2` in Postman.
+- **Cause:** `cc3c6ba` renamed the Member collection `member` → `members`, but the five `$lookup` helpers in `libs/config.ts` still used `from: 'member'`. The join found nothing and `$unwind: '$memberData'` dropped every row. This also hit `getAgentProducts`, `getAllProductsByAdmin`, `getFavorites`, `getVisited`, board articles, comments and follows.
+- **Fix:** `lookupMember`, `lookupFollowingData`, `lookupFollowerData`, `lookupFavorite`, `lookupVisit` now use `from: 'members'`.
+- **Test:** `libs/config.spec.ts` checks that every member lookup uses `MemberSchema`'s collection name.
+- **Validation:** tsc api/batch 0 errors, both builds pass, eslint 397 (baseline), jest 4 passed. A read-only DB check showed 2 ACTIVE products survive the join with `members` and 0 with `member`.
