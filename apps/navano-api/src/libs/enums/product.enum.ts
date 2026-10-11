@@ -33,3 +33,13 @@ export enum ProductLocation {
 registerEnumType(ProductLocation, {
 	name: 'ProductLocation',
 });
+
+export enum ProductOccasion {
+	BIRTHDAY = 'BIRTHDAY',
+	WEDDING = 'WEDDING',
+	ANNIVERSARY = 'ANNIVERSARY',
+	HOLIDAY = 'HOLIDAY',
+}
+registerEnumType(ProductOccasion, {
+	name: 'ProductOccasion',
+});

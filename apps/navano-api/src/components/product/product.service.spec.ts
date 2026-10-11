@@ -5,7 +5,7 @@ import type { MemberService } from '../member/member.service';
 import type { ViewService } from '../view/view.service';
 import type { LikeService } from '../like/like.service';
 import type { Product } from '../../libs/dto/product/product';
-import { ProductLocation, ProductStatus, ProductType } from '../../libs/enums/product.enum';
+import { ProductLocation, ProductOccasion, ProductStatus, ProductType } from '../../libs/enums/product.enum';
 import { ProductsInquiry } from '../../libs/dto/product/product.input';
 import { ProductUpdate } from '../../libs/dto/product/product.update';
 import { T } from '../../libs/types/common';
@@ -45,6 +45,7 @@ describe('ProductService', () => {
 				search: {
 					locationList: [ProductLocation.SEOUL],
 					typeList: [ProductType.FLOWER, ProductType.CAKE],
+					occasionList: [ProductOccasion.BIRTHDAY],
 					pricesRange: { start: 10, end: 100 },
 					text: 'rose',
 				},
@@ -55,6 +56,7 @@ describe('ProductService', () => {
 			expect(match).toEqual({
 				productLocation: { $in: [ProductLocation.SEOUL] },
 				productType: { $in: [ProductType.FLOWER, ProductType.CAKE] },
+				productOccasion: { $in: [ProductOccasion.BIRTHDAY] },
 				productPrice: { $gte: 10, $lte: 100 },
 				productTitle: { $regex: /rose/i },
 			});

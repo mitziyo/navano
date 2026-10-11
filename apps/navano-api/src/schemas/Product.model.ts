@@ -1,5 +1,5 @@
 import { Schema } from 'mongoose';
-import { ProductLocation, ProductStatus, ProductType } from '../libs/enums/product.enum';
+import { ProductLocation, ProductOccasion, ProductStatus, ProductType } from '../libs/enums/product.enum';
 
 const ProductSchema = new Schema(
 	{
@@ -23,6 +23,12 @@ const ProductSchema = new Schema(
 
 		productAddress: {
 			type: String,
+			required: true,
+		},
+
+		productOccasion: {
+			type: String,
+			enum: ProductOccasion,
 			required: true,
 		},
 

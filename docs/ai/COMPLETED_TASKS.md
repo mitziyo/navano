@@ -124,3 +124,24 @@ Source: `D:/MiT/Nestar O'quv/nestar-next` (the finished Nestar client built from
 | Not wired | CS (Notice/FAQ/Inquiry): the backend has no GraphQL API for them |
 
 Validation: `yarn tsc --noEmit` 0 errors; no references to removed real-estate fields; 11 routes return 200 on the dev server. Browser checks of data flows are pending.
+
+## 10. `productOccasion` field (2026-10-11)
+
+Source: the updated diagram `D:/MiT/MOD2/navano.pdf` adds `productOccasion` (enum, NN) to products. Values confirmed by the user: `BIRTHDAY`, `WEDDING`, `ANNIVERSARY`, `HOLIDAY`. No default value and no data migration: the existing products will be deleted.
+
+| Repo | Change |
+|---|---|
+| `navano` | `ProductOccasion` enum (`product.enum.ts`, registered for GraphQL); `Product.model.ts` `productOccasion` (required); `Product` DTO field; `ProductInput` required; `ProductUpdate` optional; `PISearch.occasionList` and `shapeMatchQuery` `productOccasion: { $in }`; `product.service.spec.ts` covers `occasionList` |
+| `navano-client` | `ProductOccasion` enum; `Product`, `ProductInput`, `ProductUpdate`, `PISearch.occasionList` types; `productOccasion` in all product selection sets; `AddNewProduct` "Select Occasion" field (required); `product/Filter.tsx` Occasion checkboxes (same pattern as Product Type) |
+
+### Validation
+
+| Check | Result |
+|---|---|
+| `npx tsc --noEmit` api / batch | 0 / 0 errors |
+| `npx jest apps/navano-api/src/components/product` | 3 passed |
+| `npx eslint "apps/**/*.ts"` | 397 (baseline) |
+| `npx nest build` | not run: the API was running in watch mode on the same `dist`; the live schema shows `ProductOccasion` and `occasionList` |
+| `navano-client` `yarn tsc --noEmit` | 0 errors; 36 / 36 operations valid against the live schema |
+| `getProducts` with `occasionList` | works |
+| `getProducts` without filter | fails with `Cannot return null for non-nullable field Product.productOccasion` until the old products (no `productOccasion`) are deleted |

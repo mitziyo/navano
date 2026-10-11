@@ -128,6 +128,7 @@ Source of truth: the Datensen data model export `D:\MiT\MOD2\navanoo.pdf`. The d
 | `propertyStatus` | `productStatus` | enum, NN | `HOLD` / `ACTIVE` / `SOLD` / `DELETE` (adds `HOLD`, default `ACTIVE`) |
 | `propertyLocation` | `productLocation` | enum, NN | same Korean city values |
 | `propertyAddress` | `productAddress` | string, NN | |
+| (new) | `productOccasion` | enum, NN | `BIRTHDAY` / `WEDDING` / `ANNIVERSARY` / `HOLIDAY` (added 2026-10-11, `navano.pdf`); search filter `occasionList` |
 | `propertyTitle` | `productTitle` | string, NN | |
 | `propertyPrice` | `productPrice` | double, NN | |
 | (new) | `productItemCount` | int, NN | number of items available |
