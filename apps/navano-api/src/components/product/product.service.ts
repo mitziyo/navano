@@ -18,7 +18,7 @@ import { ViewGroup } from '../../libs/enums/view.enum';
 import { ViewService } from '../view/view.service';
 import { ProductUpdate } from '../../libs/dto/product/product.update';
 import moment from 'moment';
-import { lookupAuthMemberLiked, lookupMember, shapeIntoMongoObjectId } from '../../libs/config';
+import { lookupAuthMemberLiked, lookupMember, shapeIntoMongoObjectId, escapeRegex } from '../../libs/config';
 import { LikeService } from '../like/like.service';
 import { LikeInput } from '../../libs/dto/like/like.input';
 import { LikeGroup } from '../../libs/enums/like.enum';
@@ -69,11 +69,11 @@ export class ProductService {
 				targetProduct.productViews++;
 			}
 
-			targetProduct.memberData = await this.memberService.getMember(null, targetProduct.memberId);
 			//LIKED
 			const likeInput = { memberId: memberId, likeRefId: productId, likeGroup: LikeGroup.PRODUCT };
 			targetProduct.meLiked = await this.likeService.checkLikeExistence(likeInput);
 		}
+		targetProduct.memberData = await this.memberService.getMember(null, targetProduct.memberId);
 		return targetProduct;
 	}
 
@@ -120,7 +120,6 @@ export class ProductService {
 		const sort: T = { [input?.sort ?? 'createdAt']: input?.direction ?? Direction.DESC };
 
 		this.shapeMatchQuery(match, input);
-		console.log('match:', match);
 
 		const result = await this.productModel
 			.aggregate([
@@ -169,7 +168,7 @@ export class ProductService {
 		if (pricesRange) match.productPrice = { $gte: pricesRange.start, $lte: pricesRange.end };
 		if (periodsRange) match.createdAt = { $gte: periodsRange.start, $lte: periodsRange.end };
 
-		if (text) match.productTitle = { $regex: new RegExp(text, 'i') };
+		if (text) match.productTitle = { $regex: new RegExp(escapeRegex(text), 'i') };
 	}
 
 	public async getAgentProducts(memberId: ObjectId, input: AgentProductsInquiry): Promise<Products> {
@@ -226,6 +225,9 @@ export class ProductService {
 		});
 
 		if (!result) throw new InternalServerErrorException(Message.SOMETHING_WENT_WRONG);
+
+		// Return the like state too, so the client can update the card without refetching lists
+		result.meLiked = modifier > 0 ? [{ memberId, likeRefId, myFavorite: true }] : [];
 		return result;
 	}
 

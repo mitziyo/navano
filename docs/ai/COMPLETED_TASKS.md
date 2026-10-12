@@ -209,3 +209,35 @@ Restyle of §12 to the light rose Stitch design (`zip/code.html`, `zip/screen.pn
 | i18n | 19 new keys in `en` / `kr` / `ru`; unused "Shown on your public page" removed |
 
 Validation: `yarn tsc --noEmit` 0 errors; SCSS (`pc/main.scss`, `app.scss`) compiles; headless Chrome at 1440 (AGENT) matches the design. `yarn build` not run (dev server running).
+
+## 14. Homepage rose redesign + API cleanup (2026-10-13)
+
+Design: `navano-client/zip/{code.html,DESIGN.md,screen.png}` (rose Stitch homepage). Fintech copy from the design replaced with flower / cake / chocolate shop copy; sections without backend data use real data or stay static.
+
+### Backend (`navano-api`)
+
+| Change | Why |
+|---|---|
+| `escapeRegex` (`libs/config.ts`) used for search text in `getProducts`, `getAgents`, `getAllMembersByAdmin`, `getBoardArticles` | Raw text went into `new RegExp`, so input like `(` returned a 500 |
+| `@Max(100)` on every paginated `limit` (product, member, board-article, comment, follow inquiries) | No upper bound on page size |
+| `likeTargetProduct` returns `meLiked` | The client had to refetch whole lists after each like |
+| `getProduct` loads `memberData` for logged-out visitors too | It was only set inside `if (memberId)` |
+| Removed `console.log('match:', …)` from list services | Debug noise |
+
+Validation: tsc api / batch 0 / 0; jest product 4 passed (new literal-search test); eslint 397 (baseline); live API: `text: "("` returns an empty list, `limit: 500` is rejected.
+
+### Frontend (`navano-client`)
+
+| Area | Change |
+|---|---|
+| Tokens | Rose tokens moved from My Page to `scss/variables.scss` as `$nv-*` (shared by navbar, footer, home, My Page) |
+| Navbar (`Top.tsx`, `scss/pc/layout/navbar.scss`), all pages | White glass bar, brand with tagline, pill links, notification / language / avatar menus. Fixed: scroll listener added on every render, Korean flag image `id="uz"`, menu component recreated each render |
+| Footer (`Footer.tsx`, `scss/pc/layout/footer.scss`), all pages | Contact, social, newsletter card, link columns that now link to product search presets, community and CS |
+| Hero (`HeroSection.tsx`) | Rotating cake / roses / chocolate image card with badge, headline, indicators; replaces `FiberContainer` (deleted with `ScrollControls`) |
+| Search console (`HeaderFilter.tsx`) | Location / Occasion / Category fields with "All" options, Advanced, search. Fixed: city image path without leading slash (broken on `/kr`, `/ru`), price range reset to 0, state mutation in submit |
+| Sections | Trend (4-card grid), Popular (3 cards with Type / Region / Pack strip), Top Stores (carousel, "Visit store" → `/agent/detail`), Events (static), Community (News / Free tabs, one query per tab) |
+| Data logic | Lists read Apollo `data` directly (no `onCompleted` + `useState` copy); likes update through the cache (`LIKE_TARGET_PRODUCT` selects `meLiked`), no list refetch; unused vars / logs removed |
+| Removed | Top Products, Advertisement (real-estate video), `Reveal.tsx`, `homeShared.scss` |
+| i18n | 91 new keys in `en` / `kr` / `ru` |
+
+Validation: `yarn tsc --noEmit` 0; SCSS (pc, app, mobile) compiles; `/`, `/kr`, `/ru`, `/product`, `/agent`, `/community`, `/cs`, `/mypage` 200; headless Chrome 1440 screenshots of `/`, `/product`, `/mypage`. Not tested: the like click flow with a real login. `yarn build` not run (dev server running).

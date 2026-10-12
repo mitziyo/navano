@@ -1,5 +1,5 @@
 import { Field, InputType, Int } from '@nestjs/graphql';
-import { IsIn, IsInt, IsNotEmpty, IsOptional, Length, Min } from 'class-validator';
+import { IsIn, IsInt, IsNotEmpty, IsOptional, Length, Max, Min } from 'class-validator';
 import { ProductLocation, ProductOccasion, ProductStatus, ProductType } from '../../enums/product.enum';
 import type { ObjectId } from 'mongoose';
 import { availableProductSorts } from '../../config';
@@ -109,6 +109,7 @@ export class ProductsInquiry {
 
 	@IsNotEmpty()
 	@Min(1)
+	@Max(100)
 	@Field(() => Int)
 	limit!: number;
 
@@ -142,6 +143,7 @@ export class AgentProductsInquiry {
 
 	@IsNotEmpty()
 	@Min(1)
+	@Max(100)
 	@Field(() => Int)
 	limit!: number;
 
@@ -179,6 +181,7 @@ export class AllProductsInquiry {
 
 	@IsNotEmpty()
 	@Min(1)
+	@Max(100)
 	@Field(() => Int)
 	limit!: number;
 
@@ -205,6 +208,7 @@ export class OrdinaryInquiry {
 
 	@IsNotEmpty()
 	@Min(1)
+	@Max(100)
 	@Field(() => Int)
 	limit!: number;
 }

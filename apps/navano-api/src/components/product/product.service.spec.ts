@@ -61,6 +61,16 @@ describe('ProductService', () => {
 				productTitle: { $regex: /rose/i },
 			});
 		});
+		it('matches search text literally, even with regex characters', () => {
+			const match: T = {};
+			const input = { page: 1, limit: 10, search: { text: 'Rose (red)+' } } as ProductsInquiry;
+
+			(service as unknown as ShapeMatchQuery).shapeMatchQuery(match, input);
+
+			const regex = (match.productTitle as { $regex: RegExp }).$regex;
+			expect(regex.test('Big rose (red)+ bouquet')).toBe(true);
+			expect(regex.test('Rose redd')).toBe(false);
+		});
 	});
 
 	describe('getAgentProducts', () => {

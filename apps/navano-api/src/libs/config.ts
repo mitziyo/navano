@@ -27,6 +27,9 @@ export const getSerialForImage = (filename: string) => {
 	return uuidv4() + ext;
 };
 
+/** Escapes regex special characters so user search text is matched literally */
+export const escapeRegex = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 export const shapeIntoMongoObjectId = (target: any) => {
 	return typeof target === 'string' ? new ObjectId(target) : target;
 };

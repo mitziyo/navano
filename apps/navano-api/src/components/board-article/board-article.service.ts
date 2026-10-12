@@ -15,7 +15,7 @@ import { ViewService } from '../view/view.service';
 import { BoardArticleStatus } from '../../libs/enums/board-article.enum';
 import { ViewGroup } from '../../libs/enums/view.enum';
 import { StatisticModifier, T } from '../../libs/types/common';
-import { lookupAuthMemberLiked, lookupMember, shapeIntoMongoObjectId } from '../../libs/config';
+import { lookupAuthMemberLiked, lookupMember, shapeIntoMongoObjectId, escapeRegex } from '../../libs/config';
 import { LikeService } from '../like/like.service';
 import { LikeInput } from '../../libs/dto/like/like.input';
 import { LikeGroup } from '../../libs/enums/like.enum';
@@ -143,14 +143,12 @@ export class BoardArticleService {
 		if (articleCategory) match.articleCategory = articleCategory;
 
 		if (text) {
-			match.articleTitle = { $regex: new RegExp(text, 'i') };
+			match.articleTitle = { $regex: new RegExp(escapeRegex(text), 'i') };
 		}
 
 		if (input.search?.memberId) {
 			match.memberId = shapeIntoMongoObjectId(input.search.memberId);
 		}
-
-		console.log('match:', match);
 
 		const result = await this.boardArticleModel
 			.aggregate([
