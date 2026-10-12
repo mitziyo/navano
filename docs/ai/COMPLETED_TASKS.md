@@ -145,3 +145,67 @@ Source: the updated diagram `D:/MiT/MOD2/navano.pdf` adds `productOccasion` (enu
 | `navano-client` `yarn tsc --noEmit` | 0 errors; 36 / 36 operations valid against the live schema |
 | `getProducts` with `occasionList` | works |
 | `getProducts` without filter | fails with `Cannot return null for non-nullable field Product.productOccasion` until the old products (no `productOccasion`) are deleted |
+
+## 11. `navano-client`: homepage premium redesign (2026-10-12)
+
+UI layer only. No GraphQL documents, types, routes or data shapes changed; every `useQuery` / `useMutation`, `initialInput`, like/detail handler and Swiper `.swiper-*` hook is kept. Skills used: `redesign-existing-projects` (audit → fix order), `frontend-design`, `ui-ux-pro-max` (`--design-system`: Organic Biophilic). `shadcn-ui` not used (project is MUI + SCSS, no Tailwind/Radix).
+
+| Area | Change |
+|---|---|
+| Tokens | `scss/variables.scss`: Fraunces `$font-heading`, palette (`$ink`, `$cream`, `$forest` for actions, `$terracotta` accent only, `$terracotta-ink` for accent text), radii, warm shadows, `btn-*` / `focus-ring` / `badge` mixins. Additive only |
+| Hero | New `HeroSection.tsx` replaces `FiberContainer` (kept on disk) in `LayoutHome.tsx`: forest background, headline, CTAs `/product` + `/agent`, three fact chips, CSS-only flower art, existing `HeaderFilter` as the search bar. CSS entrance (visible before hydration, reduced-motion safe). Mobile: compact hero |
+| Sections | New `SectionHeading.tsx`; titles "Trending now", "Most viewed", "Best sellers" (= `TopProducts`, sorted by `productRank`, rank flag "No. N"), "Top stores", "From our community". Swiper arrows are now `<button>`s with the same classes. "See all stores" now links to `/agent` |
+| Cards | `PopularProductCard` / `TopProductCard` rebuilt (media tile, status badge for HOLD/SOLD, hover action pills, serif title, accent rule, occasion + location, tabular price). `TrendProductCard` uses shared `productLabels.ts` + hover lift / heart pop. `TopAgentCard`: squircle avatar, "Store" label, counts, links to `/agent/detail?agentId=`. `CommunityCard`: editorial story cards with author/date/likes |
+| States | `SectionState.tsx`: skeleton cards while loading, composed empty states. `Reveal.tsx`: light scroll reveal on desktop sections |
+| Styles | New `scss/homeShared.scss` (pc + mobile); `scss/pc/homepage/homepage.scss` rewritten for layout (Events/Advertisement blocks kept); mobile homepage blocks replaced |
+| i18n | 44 new keys in `en` / `kr` / `ru` |
+
+### Validation
+
+| Check | Result |
+|---|---|
+| `yarn tsc --noEmit` | 0 errors |
+| `yarn build` | success (`/` 12.9 kB) |
+| SCSS compile (app / pc / mobile) | OK |
+| Dev routes `/`, `/product`, `/agent`, `/community`, `/kr`, `/ru` | 200; hero renders in all three locales |
+| Live data | `getProducts` and `getAgents` return data; sections render real products and stores (headless Chrome screenshots at 1440 and mobile UA) |
+| `yarn lint` | not run: no ESLint config (`next lint` is interactive) |
+
+Left as is: the Advertisement video (real-estate footage), the Events section (Korean tourism content), mobile Community/Events placeholders, and the legacy 1300px mobile footer that makes `#mobile-wrap` wider than the screen.
+
+## 12. `navano-client`: My Page redesign (2026-10-12)
+
+UI layer only. Layout follows the Stitch design (`code.html` / `DESIGN.md` / `screen.png` in the client root) but uses Navano's light palette (coral `$coral`, Playfair Display + Poppins) instead of the design's dark theme. Sections with no backend data (KYC, hardware keys, sessions, API key, connected accounts) are replaced with real member data. No GraphQL documents, types or routes changed.
+
+| Area | Change |
+|---|---|
+| `MyMenu.tsx` | Sidebar rebuilt: profile block (avatar, nick, role label "Store"/"Customer"/"Admin"), grouped links with MUI icons and an active bar, Admin Panel link for ADMIN, Logout. Same `?category=` routes; leftover red `PortraitIcon` buttons removed. Exports `memberRoleLabel` |
+| `MyProfile.tsx` | Page header (breadcrumb, "View public page" → `/member?memberId=`), hero card (cover, avatar with change-photo overlay, name + role badge, nick/phone/address), metrics strip from `GET_MEMBER` (member since, products or articles, followers, likes), "Profile details" form (adds Full name and About me — already in `MemberUpdate`), save bar with Discard/Update, right rail (account summary, quick links). Empty `memberFullName` / `memberDesc` are not sent (backend `@Length` validation) |
+| `pages/mypage/index.tsx` | `is-profile` class on `main-config`, `aside` for the sidebar; logic unchanged |
+| Styles | `scss/pc/mypage/mypage.scss` shell rewritten with `$mp-*` tokens (list/card rules for other tabs kept as is); `myProfile.scss` rewritten |
+| i18n | 53 new keys in `en` / `kr` / `ru` |
+
+### Validation
+
+| Check | Result |
+|---|---|
+| `yarn tsc --noEmit` | 0 errors |
+| SCSS compile (`scss/pc/main.scss`) | OK |
+| `/mypage`, `/kr/mypage`, `/ru/mypage`, `?category=myProducts` | 200 |
+| Headless Chrome (1440, AGENT) | profile tab and My Products tab render in the new shell; `GET_MEMBER` metrics load |
+| `yarn build` | not run (dev server running) |
+
+Known, pre-existing: a hard reload of `/mypage` redirects to `/` because the page's `user._id` check runs before the layout restores `userVar` from the token; "Update profile" stays disabled while `memberImage` is empty. Mobile My Page is still a stub.
+
+## 13. `navano-client`: My Page rose redesign (2026-10-13)
+
+Restyle of §12 to the light rose Stitch design (`zip/code.html`, `zip/screen.png`). Same data, handlers and routes; sections with no backend data are still replaced with real member data. No GraphQL, type or route changes.
+
+| Area | Change |
+|---|---|
+| Tokens / fonts | `$mp-*` rose palette (`#e11d48` primary, `#fbcfe8` borders, `#fff7f9` canvas with pink 32px grid), Space Grotesk / Manrope / Geist loaded in `scss/variables.scss`, used only on My Page |
+| `MyMenu.tsx` | Gradient active item with 4px rose bar; footer with Help Center (`/cs`), Logout and member ID; exports `memberRef` (`#NVN-` + last 6 of `_id`, display only) |
+| `MyProfile.tsx` | Header actions "View public page" + gradient "Add Product" (stores) / "Write Article" (customers); cover status pill; avatar frame with live dot and hover overlay; role badge + ID chip; form adds read-only Role field and per-field hints; new "Your activity" tiles (Favorites, Articles, Followings); right rail as icon-slot items (role/status, rank/points), "View public page" row, Quick links, Navano member card |
+| i18n | 19 new keys in `en` / `kr` / `ru`; unused "Shown on your public page" removed |
+
+Validation: `yarn tsc --noEmit` 0 errors; SCSS (`pc/main.scss`, `app.scss`) compiles; headless Chrome at 1440 (AGENT) matches the design. `yarn build` not run (dev server running).
