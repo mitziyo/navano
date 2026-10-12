@@ -33,6 +33,9 @@ export class Member {
 	memberImage!: string;
 
 	@Field(() => String, { nullable: true })
+	memberCover?: string;
+
+	@Field(() => String, { nullable: true })
 	memberAddress?: string;
 
 	@Field(() => String, { nullable: true })

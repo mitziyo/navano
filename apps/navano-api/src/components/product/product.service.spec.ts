@@ -73,6 +73,41 @@ describe('ProductService', () => {
 		});
 	});
 
+	describe('getProductFacets', () => {
+		it('counts ACTIVE products per location, type and occasion', async () => {
+			aggregate.mockReturnValue({
+				exec: () =>
+					Promise.resolve([
+						{
+							total: [{ count: 3 }],
+							locations: [{ value: 'SEOUL', count: 2 }],
+							types: [{ value: 'FLOWER', count: 3 }],
+							occasions: [],
+						},
+					]),
+			});
+
+			const facets = await service.getProductFacets();
+
+			const [pipeline] = aggregate.mock.calls[0] as [T[]];
+			expect(pipeline[0]).toEqual({ $match: { productStatus: ProductStatus.ACTIVE } });
+			expect(facets).toEqual({
+				total: 3,
+				locations: [{ value: 'SEOUL', count: 2 }],
+				types: [{ value: 'FLOWER', count: 3 }],
+				occasions: [],
+			});
+		});
+
+		it('returns zeros when there are no products', async () => {
+			aggregate.mockReturnValue({
+				exec: () => Promise.resolve([{ total: [], locations: [], types: [], occasions: [] }]),
+			});
+
+			expect(await service.getProductFacets()).toEqual({ total: 0, locations: [], types: [], occasions: [] });
+		});
+	});
+
 	describe('getAgentProducts', () => {
 		it('rejects a DELETE status search', async () => {
 			await expect(

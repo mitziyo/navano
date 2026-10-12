@@ -1,6 +1,6 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { ProductService } from './product.service';
-import { Products, Product } from '../../libs/dto/product/product';
+import { Products, Product, ProductFacets } from '../../libs/dto/product/product';
 import {
 	AgentProductsInquiry,
 	AllProductsInquiry,
@@ -55,6 +55,11 @@ export class ProductResolver {
 	): Promise<Product> {
 		input._id = shapeIntoMongoObjectId(input._id);
 		return await this.productService.updateProduct(memberId, input);
+	}
+
+	@Query(() => ProductFacets)
+	public async getProductFacets(): Promise<ProductFacets> {
+		return await this.productService.getProductFacets();
 	}
 
 	@UseGuards(WithoutGuard)

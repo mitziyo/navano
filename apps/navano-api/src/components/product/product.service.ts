@@ -8,7 +8,7 @@ import {
 	ProductsInquiry,
 	ProductInput,
 } from '../../libs/dto/product/product.input';
-import { Products, Product } from '../../libs/dto/product/product';
+import { Products, Product, ProductFacets, FacetCount } from '../../libs/dto/product/product';
 import { Direction, Message } from '../../libs/enums/common.enum';
 import { MemberService } from '../member/member.service';
 import type { ObjectId } from 'mongoose';
@@ -155,6 +155,42 @@ export class ProductService {
 	public async getVisited(memberId: ObjectId, input: OrdinaryInquiry): Promise<Products> {
 		// haqiqiy mantiq view.service.ts'da — bu yerda faqat shu servisga yo'naltiradi
 		return await this.viewService.getVisitedProducts(memberId, input);
+	}
+
+	// Counts per filter option for ACTIVE products, in one aggregation (filter sidebar numbers)
+	public async getProductFacets(): Promise<ProductFacets> {
+		const countBy = (field: string) => [
+			{ $group: { _id: `$${field}`, count: { $sum: 1 } } },
+			{ $project: { _id: 0, value: '$_id', count: 1 } },
+			{ $sort: { count: -1 as const, value: 1 as const } },
+		];
+
+		type FacetResult = {
+			total: { count: number }[];
+			locations: FacetCount[];
+			types: FacetCount[];
+			occasions: FacetCount[];
+		};
+		const [result] = await this.productModel
+			.aggregate<FacetResult>([
+				{ $match: { productStatus: ProductStatus.ACTIVE } },
+				{
+					$facet: {
+						total: [{ $count: 'count' }],
+						locations: countBy('productLocation'),
+						types: countBy('productType'),
+						occasions: countBy('productOccasion'),
+					},
+				},
+			])
+			.exec();
+
+		return {
+			total: result?.total?.[0]?.count ?? 0,
+			locations: result?.locations ?? [],
+			types: result?.types ?? [],
+			occasions: result?.occasions ?? [],
+		};
 	}
 
 	private shapeMatchQuery(match: T, input: ProductsInquiry): void {

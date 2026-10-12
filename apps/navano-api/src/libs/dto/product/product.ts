@@ -83,3 +83,27 @@ export class Products {
 	@Field(() => [TotalCounter], { nullable: true })
 	metaCounter!: TotalCounter[];
 }
+
+@ObjectType()
+export class FacetCount {
+	@Field(() => String)
+	value!: string;
+
+	@Field(() => Int)
+	count!: number;
+}
+
+@ObjectType()
+export class ProductFacets {
+	@Field(() => Int)
+	total!: number;
+
+	@Field(() => [FacetCount])
+	locations!: FacetCount[];
+
+	@Field(() => [FacetCount])
+	types!: FacetCount[];
+
+	@Field(() => [FacetCount])
+	occasions!: FacetCount[];
+}

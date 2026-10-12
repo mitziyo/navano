@@ -1,6 +1,13 @@
 import { ObjectId } from 'bson';
 
-export const availableAgentSorts = ['createdAt', 'updatedAt', 'memberLikes', 'memberViews', 'memberRank'];
+export const availableAgentSorts = [
+	'createdAt',
+	'updatedAt',
+	'memberLikes',
+	'memberViews',
+	'memberRank',
+	'memberProducts',
+];
 export const availableMemberSorts = ['createdAt', 'updatedAt', 'memberLikes', 'memberViews'];
 
 export const availableProductSorts = [

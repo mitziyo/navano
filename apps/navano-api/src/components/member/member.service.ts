@@ -1,9 +1,10 @@
 import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, PipelineStage } from 'mongoose';
 import { Member, Members } from '../../libs/dto/member/member';
 import { AgentsInquiry, LoginInput, MemberInput, MembersInquiry } from '../../libs/dto/member/member.input';
 import { MemberStatus, MemberType } from '../../libs/enums/member.enum';
+import { ProductLocation, ProductStatus } from '../../libs/enums/product.enum';
 import { Direction, Message } from '../../libs/enums/common.enum';
 import { AuthService } from '../auth/auth.service';
 import { ObjectId } from 'mongoose';
@@ -16,6 +17,19 @@ import { LikeGroup } from '../../libs/enums/like.enum';
 import { LikeService } from '../like/like.service';
 import { Follower, Following, MeFollowed } from '../../libs/dto/follow/follow';
 import { lookupAuthMemberLiked, escapeRegex } from '../../libs/config';
+
+// Address spellings for each city filter value
+const CITY_SPELLINGS: Partial<Record<ProductLocation, string[]>> = {
+	[ProductLocation.SEOUL]: ['Seoul'],
+	[ProductLocation.BUSAN]: ['Busan'],
+	[ProductLocation.INCHEON]: ['Incheon'],
+	[ProductLocation.DAEGU]: ['Daegu'],
+	[ProductLocation.GYEONGJU]: ['Gyeongju'],
+	[ProductLocation.GWANGJU]: ['Gwangju'],
+	[ProductLocation.CHONJU]: ['Jeonju', 'Chonju'],
+	[ProductLocation.DAEJON]: ['Daejeon', 'Daejon'],
+	[ProductLocation.JEJU]: ['Jeju'],
+};
 
 @Injectable()
 export class MemberService {
@@ -115,14 +129,50 @@ export class MemberService {
 	}
 
 	public async getAgents(memberId: ObjectId, input: AgentsInquiry): Promise<Members> {
-		const { text } = input.search;
+		const { text, locationList, typeList } = input.search;
 		const match: T = { memberType: MemberType.AGENT, memberStatus: MemberStatus.ACTIVE };
 		const sort: T = { [input?.sort ?? 'createdAt']: input?.direction ?? Direction.DESC };
-		if (text) match.memberNick = { $regex: new RegExp(escapeRegex(text), 'i') };
+		const and: T[] = [];
+
+		if (text) {
+			const pattern = new RegExp(escapeRegex(text), 'i');
+			and.push({ $or: [{ memberNick: pattern }, { memberFullName: pattern }] });
+		}
+		if (locationList?.length) {
+			const cities = locationList.flatMap((location) => CITY_SPELLINGS[location] ?? [location]);
+			and.push({ memberAddress: { $regex: new RegExp(cities.map(escapeRegex).join('|'), 'i') } });
+		}
+		if (and.length) match.$and = and;
+
+		// Stores that sell at least one ACTIVE product of the requested types
+		const typeStages: PipelineStage[] = typeList?.length
+			? [
+					{
+						$lookup: {
+							from: 'products',
+							let: { storeId: '$_id' },
+							pipeline: [
+								{
+									$match: {
+										$expr: { $eq: ['$memberId', '$$storeId'] },
+										productStatus: ProductStatus.ACTIVE,
+										productType: { $in: typeList },
+									},
+								},
+								{ $limit: 1 },
+							],
+							as: 'typeMatch',
+						},
+					},
+					{ $match: { 'typeMatch.0': { $exists: true } } },
+					{ $project: { typeMatch: 0 } },
+				]
+			: [];
 
 		const result = await this.memberModel
 			.aggregate([
 				{ $match: match },
+				...typeStages,
 				{ $sort: sort },
 				{
 					$facet: {
@@ -157,6 +207,9 @@ export class MemberService {
 		const result = await this.memberStatsEditor({ _id: likeRefId, targetKey: 'memberLikes', modifier: modifier });
 
 		if (!result) throw new InternalServerErrorException(Message.SOMETHING_WENT_WRONG);
+
+		// Return the like state too, so the client can update the card without refetching lists
+		result.meLiked = modifier > 0 ? [{ memberId, likeRefId, myFavorite: true }] : [];
 		return result;
 	}
 

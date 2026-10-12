@@ -42,6 +42,10 @@ export class MemberUpdate {
 
 	@IsOptional()
 	@Field(() => String, { nullable: true })
+	memberCover?: string;
+
+	@IsOptional()
+	@Field(() => String, { nullable: true })
 	memberAddress!: string;
 
 	@IsOptional()

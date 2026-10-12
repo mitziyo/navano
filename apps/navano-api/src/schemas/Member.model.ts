@@ -48,6 +48,12 @@ const MemberSchema = new Schema(
 			default: '',
 		},
 
+		// Store page / store card cover photo
+		memberCover: {
+			type: String,
+			default: '',
+		},
+
 		memberAddress: {
 			type: String,
 		},

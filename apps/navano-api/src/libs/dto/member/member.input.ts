@@ -1,6 +1,7 @@
 import { Field, InputType, Int } from '@nestjs/graphql';
 import { IsIn, IsNotEmpty, IsOptional, Length, Max, Min } from 'class-validator';
 import { MemberAuthType, MemberStatus, MemberType } from '../../enums/member.enum';
+import { ProductLocation, ProductType } from '../../enums/product.enum';
 import { availableAgentSorts, availableMemberSorts } from '../../config';
 import { Direction } from '../../enums/common.enum';
 
@@ -44,9 +45,19 @@ export class LoginInput {
 
 @InputType()
 class AISearch {
-	@IsNotEmpty()
+	@IsOptional()
 	@Field(() => String, { nullable: true })
 	text?: string;
+
+	// Matched against the store address (cities are part of it)
+	@IsOptional()
+	@Field(() => [ProductLocation], { nullable: true })
+	locationList?: ProductLocation[];
+
+	// Stores with at least one ACTIVE product of these types
+	@IsOptional()
+	@Field(() => [ProductType], { nullable: true })
+	typeList?: ProductType[];
 }
 
 @InputType()
