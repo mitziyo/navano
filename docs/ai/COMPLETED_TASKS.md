@@ -343,3 +343,34 @@ Validation: tsc api / batch 0 / 0; jest 11 passed; eslint 397 (baseline); live A
 | i18n | 29 keys in `en` / `kr` / `ru` |
 
 Validation: `yarn tsc --noEmit` 0; SCSS compiles; screenshots: `/agent` light, filtered (Cake, most products) dark; like / unlike with a real `rose_atelier` login sends one `LikeTargetMember` each and updates the card; hard loads of `/agent`, page 2, a broken `?input=`, `/` and `/product` show no console or hydration errors.
+
+## 19. Navano AI shopping assistant (2026-10-14)
+
+Reference: Hostinger's "Agent" button and chat panel. Decisions: label "Navano AI" (not "Agent", which means store here, D8); finds real products and stores; logged-in members only; one GraphQL mutation without streaming; model `claude-opus-5-5` (D12).
+
+### Backend (`navano-api`)
+
+| Area | Change |
+|---|---|
+| Dependency | `@anthropic-ai/sdk` ^0.133.0; env key `ANTHROPIC_API_KEY`; new `.env.example` with empty keys |
+| `components/assistant/*` | `AssistantModule`, `AssistantResolver` (`askAssistant`, `AuthGuard`), `AssistantService`: tool loop (max 4 rounds), tools `search_products` → `getProducts`, `search_stores` → `getAgents`, `get_catalog_overview` → `getProductFacets`; model input is checked against the enums; system prompt and tools cached; server-side fallback on refusals; up to 4 product cards from the last search |
+| `libs/dto/assistant/assistant.ts` | `AssistantInput` (1–12 turns, 1–1000 chars each), `AssistantReply { text, products }` |
+| Limits | 20 requests per member per hour; `Message.ASSISTANT_LIMIT`, `Message.ASSISTANT_UNAVAILABLE` (also returned when the key is missing) |
+| Tests | `assistant.service.spec.ts`: tool call with filtered enums, refusal, hourly limit, history must end with a user turn, missing key |
+
+Validation: tsc api / batch 0 / 0; jest 16 passed (5 new); eslint 397 (baseline); live schema has `askAssistant`; no token → auth error; with a token and no key → `ASSISTANT_UNAVAILABLE`.
+
+### Frontend (`navano-client`)
+
+| Area | Change |
+|---|---|
+| Navbar | `AssistantButton` (gradient-border pill, last item in `.nav-actions`, right of the avatar); `AssistantPanel` rendered after the header (the header's `backdrop-filter` would trap a fixed child) |
+| Panel | Header (new chat, close), welcome + 4 suggestion chips, user / AI bubbles, product cards linking to `/product/detail?id=`, typing dots, input (Enter sends, Shift+Enter new line), note; Esc closes; logged-out state links to `/account/join`; chat kept in `sessionStorage` per member |
+| API | `ASK_ASSISTANT`, `libs/types/assistant/assistant.ts`, `assistantOpenVar`; the global error alert skips `AskAssistant` (errors show in the panel) |
+| Styles | `scss/pc/layout/assistant.scss` on `--nv-*`; new `--nv-ai-gradient` (light rose → violet, dark blue → violet) |
+| i18n | 17 keys in `en` / `kr` / `ru` |
+
+Validation: `yarn tsc --noEmit` 0; SCSS (pc, app) compiles; headless Chrome 1440: logged out (light), logged in (light, dark), error reply shown once in the panel; `/`, `/kr`, `/ru`, `/product`, `/agent` 200; no console errors. Not tested: real replies (no `ANTHROPIC_API_KEY` yet). Mobile not covered.
+
+Found, not fixed: `auth.module.ts` registers `JwtModule` with `${process.env.SECRET_TOKEN}` at import time, before `ConfigModule` loads `.env`, so the running API signs and verifies tokens with the string `"undefined"`. Anyone can forge a token for any member, including ADMIN.
+

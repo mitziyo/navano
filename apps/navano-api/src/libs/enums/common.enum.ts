@@ -19,6 +19,9 @@ export enum Message {
 	NOT_ALLOWED_REQUEST = 'Not Allowed Request!',
 	PROVIDE_ALLOWED_FORMAT = 'Please provide jpg, jpeg or png images!',
 	SELF_SUBSCRIPTION_DENIED = 'Self subscription is denied!',
+
+	ASSISTANT_LIMIT = 'You have reached the Navano AI limit, please try again later!',
+	ASSISTANT_UNAVAILABLE = 'Navano AI is not available right now, please try again later!',
 }
 
 export enum Direction {

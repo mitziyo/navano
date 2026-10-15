@@ -15,6 +15,7 @@ Format: Decision / Why / Risks / Alternatives considered. Status shows whether t
 | D9 | Defer Order/Cart to Phase 3 | Agreed |
 | D10 | Use a fresh dev DB for Phase 2 instead of migrating data | Recommended |
 | D11 | `navanoo.pdf` data model is the schema source of truth | Agreed |
+| D12 | Navano AI uses the Claude API from `navano-api` only | Applied |
 
 ---
 
@@ -72,3 +73,8 @@ Format: Decision / Why / Risks / Alternatives considered. Status shows whether t
 - **Why:** The user designed the Navano schema in Datensen (`D:\MiT\MOD2\navanoo.pdf`). The earlier draft fields (`productCollection`, `productSize`, `productStock`, `productSale`, `productCustomizable`) are replaced by the diagram's fields: `productType`, `productItemCount`, and `memberAddress` on members. Enum values the diagram does not show were confirmed by the user: status `HOLD/ACTIVE/SOLD/DELETE`, Korean city locations, `constructedAt` removed.
 - **Risks:** `navano.dmm` (saved in 2024) is the old Nestar model. `navanoo.dmm` (generated on 2026-10-09 from `navano.dmm`) is the Datensen source that matches the Phase 2 code; `navanoo.pdf` must be re-exported from it. If the diagram changes again, the docs must be re-synced by hand.
 - **Alternatives:** Keep the earlier draft. Rejected because the user's model takes priority.
+
+### D12. Navano AI uses the Claude API from `navano-api` only
+- **Why:** The API key must never reach the browser. The backend already owns the data the assistant needs (`getProducts`, `getAgents`, `getProductFacets`), so the tools reuse those services and the client only calls one GraphQL mutation (`askAssistant`). Model `claude-opus-5-5` (chosen by the user on 2026-10-14), effort `low`, no streaming in the first version.
+- **Risks:** API cost per message. Mitigated by logged-in members only, 20 requests per member per hour (in memory, per process), at most 12 history turns of 1000 characters, and at most 4 tool rounds per reply.
+- **Alternatives:** Calling the API from Next.js (exposes the key or needs a separate proxy); streaming over SSE (better feel, more moving parts; can come later).
