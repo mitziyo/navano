@@ -1,0 +1,143 @@
+{
+  "notices": [
+    {
+      "noticeCategory": "NOTICE",
+      "noticeTopic": "EVENT",
+      "noticeTitle": "Register to use and get discounts",
+      "noticeContent": "Create a free account to like products, follow stores and get member discounts from participating stores.",
+      "noticeTeam": "Navano Team",
+      "noticeLink": "/account/join"
+    },
+    {
+      "noticeCategory": "NOTICE",
+      "noticeTopic": "POLICY",
+      "noticeTitle": "It’s absolutely free to upload and trade products",
+      "noticeContent": "Stores pay no listing fee — florists, bakers and chocolatiers can list as many products as they like.",
+      "noticeTeam": "Store Partnerships"
+    },
+    {
+      "noticeCategory": "NOTICE",
+      "noticeTopic": "POLICY",
+      "noticeTitle": "Report a problem with a store or product",
+      "noticeContent": "If a product is not as described, call customer care with the store name and product link and we will follow up with the store.",
+      "noticeTeam": "Customer Care"
+    },
+    {
+      "noticeCategory": "NOTICE",
+      "noticeTopic": "UPDATE",
+      "noticeTitle": "Shop by occasion — Birthday, Wedding, Anniversary and Holiday",
+      "noticeContent": "Every product now has an occasion, so you can filter the catalog and the home search by the event you are shopping for.",
+      "noticeTeam": "Navano Team",
+      "noticeLink": "/product"
+    },
+    {
+      "noticeCategory": "NOTICE",
+      "noticeTopic": "UPDATE",
+      "noticeTitle": "Community boards are open",
+      "noticeContent": "Share what you made, ask the makers and find gift ideas on the Free, Recommendation, News and Humor boards.",
+      "noticeTeam": "Community Team",
+      "noticeLink": "/community?articleCategory=FREE"
+    },
+    {
+      "noticeCategory": "NOTICE",
+      "noticeTopic": "UPDATE",
+      "noticeTitle": "Store profiles now show covers, cities and categories",
+      "noticeContent": "Browse the Stores directory by city or category and see each store’s cover photo, products and likes.",
+      "noticeTeam": "Navano Team",
+      "noticeLink": "/agent"
+    }
+  ],
+  "faqs": [
+    {
+      "noticeCategory": "FAQ",
+      "noticeTopic": "PRODUCTS",
+      "noticeTitle": "What can I buy on Navano?",
+      "noticeContent": "Flowers, chocolates and cakes made by independent local stores. Each product shows its type, occasion, city and how many items are available.",
+      "noticeTeam": "Customer Care"
+    },
+    {
+      "noticeCategory": "FAQ",
+      "noticeTopic": "PRODUCTS",
+      "noticeTitle": "Are the products up to date?",
+      "noticeContent": "Stores manage their own listings. Products on hold or sold out are marked on the card, and deleted products disappear from search.",
+      "noticeTeam": "Customer Care"
+    },
+    {
+      "noticeCategory": "FAQ",
+      "noticeTopic": "PRODUCTS",
+      "noticeTitle": "How do I find a gift for a specific event?",
+      "noticeContent": "Use the occasion filter (Birthday, Wedding, Anniversary, Holiday) in the home search or on the Products page, and combine it with a city and a category.",
+      "noticeTeam": "Customer Care"
+    },
+    {
+      "noticeCategory": "FAQ",
+      "noticeTopic": "BUYERS",
+      "noticeTitle": "How do I contact a store?",
+      "noticeContent": "Open the store page from the Stores directory or from a product, and use the contact details or comments there.",
+      "noticeTeam": "Customer Care"
+    },
+    {
+      "noticeCategory": "FAQ",
+      "noticeTopic": "BUYERS",
+      "noticeTitle": "How do I save products I like?",
+      "noticeContent": "Tap the heart on a product. Liked products appear under My Favorites on My Page, and products you opened appear under Recently Visited.",
+      "noticeTeam": "Customer Care"
+    },
+    {
+      "noticeCategory": "FAQ",
+      "noticeTopic": "BUYERS",
+      "noticeTitle": "Is there a fee for buyers?",
+      "noticeContent": "No. Browsing products, liking them and following stores on Navano is free.",
+      "noticeTeam": "Customer Care"
+    },
+    {
+      "noticeCategory": "FAQ",
+      "noticeTopic": "STORES",
+      "noticeTitle": "How do I open a store?",
+      "noticeContent": "Sign up and choose the Store role. After you log in, use Add Product on My Page to list your bouquets, cakes or chocolates.",
+      "noticeTeam": "Customer Care"
+    },
+    {
+      "noticeCategory": "FAQ",
+      "noticeTopic": "STORES",
+      "noticeTitle": "Does it cost anything to list products?",
+      "noticeContent": "No, listing products on Navano is free.",
+      "noticeTeam": "Customer Care"
+    },
+    {
+      "noticeCategory": "FAQ",
+      "noticeTopic": "STORES",
+      "noticeTitle": "How do I mark a product as sold out or on hold?",
+      "noticeContent": "Go to My Products on My Page and change the product status. Buyers see an “On hold” or “Sold out” label on the card.",
+      "noticeTeam": "Customer Care"
+    },
+    {
+      "noticeCategory": "FAQ",
+      "noticeTopic": "ACCOUNT",
+      "noticeTitle": "How do I change my photo or address?",
+      "noticeContent": "Open My Page, then My Profile, update the fields and press Update profile.",
+      "noticeTeam": "Customer Care"
+    },
+    {
+      "noticeCategory": "FAQ",
+      "noticeTopic": "ACCOUNT",
+      "noticeTitle": "I forgot my password. What should I do?",
+      "noticeContent": "Call customer care and we will help you get back into your account.",
+      "noticeTeam": "Customer Care"
+    },
+    {
+      "noticeCategory": "FAQ",
+      "noticeTopic": "COMMUNITY",
+      "noticeTitle": "Who can write in the community?",
+      "noticeContent": "Any logged-in member can write articles on the Free, Recommendation, News and Humor boards and comment on posts.",
+      "noticeTeam": "Customer Care"
+    },
+    {
+      "noticeCategory": "FAQ",
+      "noticeTopic": "COMMUNITY",
+      "noticeTitle": "What is not allowed in the community?",
+      "noticeContent": "Spam, advertising that has nothing to do with flowers, cakes or chocolates, and personal attacks. Administrators can remove such posts.",
+      "noticeTeam": "Customer Care"
+    }
+  ]
+}
