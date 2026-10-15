@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import { Member } from '../../libs/dto/member/member';
 import { JwtService } from '@nestjs/jwt';
 import { T } from '../../libs/types/common';
 import { shapeIntoMongoObjectId } from '../../libs/config';
+import { Message } from '../../libs/enums/common.enum';
 
 @Injectable()
 export class AuthService {
@@ -28,8 +29,14 @@ export class AuthService {
 		return await this.jwtService.signAsync(payload);
 	}
 
+	// Expired, malformed or foreign tokens are a 401, not a 500
 	public async verifyToken(token: string): Promise<Member> {
-		const member = await this.jwtService.verifyAsync(token);
+		let member: Member;
+		try {
+			member = await this.jwtService.verifyAsync<Member>(token);
+		} catch {
+			throw new UnauthorizedException(Message.NOT_AUTHENTICATED);
+		}
 		member._id = shapeIntoMongoObjectId(member._id);
 		return member;
 	}

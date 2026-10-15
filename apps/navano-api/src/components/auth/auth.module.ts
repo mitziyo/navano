@@ -6,7 +6,15 @@ import { JwtModule } from '@nestjs/jwt';
 @Module({
 	imports: [
 		HttpModule,
-		JwtModule.register({ secret: `${process.env.SECRET_TOKEN}`, signOptions: { expiresIn: '30d' } }),
+		// Async factory: runs after ConfigModule.forRoot() has loaded .env. A static
+		// register() read process.env at import time and signed tokens with "undefined".
+		JwtModule.registerAsync({
+			useFactory: () => {
+				const secret = process.env.SECRET_TOKEN;
+				if (!secret) throw new Error('SECRET_TOKEN is not set');
+				return { secret, signOptions: { expiresIn: '30d' } };
+			},
+		}),
 	],
 	providers: [AuthService],
 	exports: [AuthService],
