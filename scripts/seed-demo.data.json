@@ -1,0 +1,212 @@
+{
+	"stores": [
+		{
+			"nick": "RAY",
+			"type": "AGENT"
+		},
+		{
+			"nick": "KEVIN",
+			"type": "AGENT"
+		},
+		{
+			"nick": "RYAN",
+			"type": "AGENT"
+		},
+		{
+			"nick": "NATHAN",
+			"type": "AGENT"
+		},
+		{
+			"nick": "SOFIA",
+			"type": "AGENT",
+			"phone": "01055503006",
+			"fullName": "Suseong Petal Atelier",
+			"address": "Suseong-ro, Suseong-gu, Daegu",
+			"desc": "Seasonal hand-tied bouquets and wedding flowers from a small atelier by Suseong Lake. Same-day delivery across Daegu.",
+			"cover": "aeb818d7482f0d88827625e3757b62ff.jpg"
+		},
+		{
+			"nick": "DANIEL",
+			"type": "AGENT",
+			"phone": "01055503007",
+			"fullName": "Jeju Tangerine Bakery",
+			"address": "Aewol-eup, Jeju-si, Jeju",
+			"desc": "Celebration cakes baked with Jeju tangerines, green tea and local cream. Custom lettering for birthdays and anniversaries.",
+			"cover": "cffed2542b35cd3c551e41f9aafb3a80.jpg"
+		}
+	],
+	"customers": [
+		{
+			"nick": "Khan",
+			"type": "USER"
+		},
+		{
+			"nick": "ADAM",
+			"type": "USER"
+		},
+		{
+			"nick": "LEO",
+			"type": "USER"
+		},
+		{
+			"nick": "EMMA",
+			"type": "USER",
+			"phone": "01055503008",
+			"fullName": "Emma Kim",
+			"address": "Mapo-gu, Seoul",
+			"desc": "Always looking for flowers for my friends' birthdays."
+		},
+		{
+			"nick": "NOAH",
+			"type": "USER",
+			"phone": "01055503009",
+			"fullName": "Noah Park",
+			"address": "Haeundae-gu, Busan",
+			"desc": "Chocolate lover and occasional cake critic."
+		},
+		{
+			"nick": "MIA",
+			"type": "USER",
+			"phone": "01055503010",
+			"fullName": "Mia Choi",
+			"address": "Yeonsu-gu, Incheon",
+			"desc": "Planning a wedding, collecting ideas for flowers and cakes."
+		}
+	],
+	"followStores": [
+		"RAY",
+		"KEVIN",
+		"RYAN",
+		"NATHAN",
+		"SOFIA",
+		"DANIEL"
+	],
+	"followCustomers": [
+		"Khan",
+		"ADAM",
+		"LEO",
+		"EMMA",
+		"NOAH",
+		"MIA"
+	],
+	"followsPerCustomer": 3,
+	"products": [
+		{
+			"store": "SOFIA",
+			"type": "FLOWER",
+			"location": "DAEGU",
+			"occasion": "BIRTHDAY",
+			"title": "Pink Rose & Lily Bouquet",
+			"price": 58,
+			"count": 12,
+			"desc": "Soft pink roses with white lilies and baby's breath, wrapped in mint paper with a satin ribbon.",
+			"images": [
+				"31c2f4a6ed5678ffe8a49e0125881cf2.jpg"
+			]
+		},
+		{
+			"store": "SOFIA",
+			"type": "FLOWER",
+			"location": "DAEGU",
+			"occasion": "WEDDING",
+			"title": "White Carnation Bridal Bouquet",
+			"price": 72,
+			"count": 6,
+			"desc": "A round bridal bouquet of ivory carnations and baby's breath, finished with a cream silk bow.",
+			"images": [
+				"4104a0177b7770710dbcf018d08aeca2.jpg"
+			]
+		},
+		{
+			"store": "SOFIA",
+			"type": "FLOWER",
+			"location": "DAEGU",
+			"occasion": "ANNIVERSARY",
+			"title": "Blush Garden Bouquet",
+			"price": 89,
+			"count": 8,
+			"desc": "Garden roses, tulips, stock and chamomile in blush and peach tones. Our most loved anniversary bouquet.",
+			"images": [
+				"aeb818d7482f0d88827625e3757b62ff.jpg"
+			]
+		},
+		{
+			"store": "RAY",
+			"type": "FLOWER",
+			"location": "SEOUL",
+			"occasion": "HOLIDAY",
+			"title": "Daisy & Baby's Breath Bouquet",
+			"price": 39,
+			"count": 20,
+			"desc": "Bright white daisies with clouds of baby's breath, tied with a butter-yellow ribbon. A cheerful everyday gift.",
+			"images": [
+				"6db9d40c93f8c8a3781e2f6dc3a82d02.jpg"
+			]
+		},
+		{
+			"store": "DANIEL",
+			"type": "CAKE",
+			"location": "JEJU",
+			"occasion": "ANNIVERSARY",
+			"title": "Jeju Green Tea Drip Cake",
+			"price": 48,
+			"count": 5,
+			"desc": "Jeju green tea sponge and cream with a dark chocolate drip, chocolate squares and truffles on top.",
+			"images": [
+				"8a1dae8504fdb98b8aa5e6c7244e9604.jpg"
+			]
+		},
+		{
+			"store": "DANIEL",
+			"type": "CAKE",
+			"location": "JEJU",
+			"occasion": "WEDDING",
+			"title": "Pistachio Cream Celebration Cake",
+			"price": 64,
+			"count": 3,
+			"desc": "Pistachio cream cake with a white chocolate drip, piped rosettes, pearls and crushed pistachio.",
+			"images": [
+				"cffed2542b35cd3c551e41f9aafb3a80.jpg"
+			]
+		},
+		{
+			"store": "RYAN",
+			"type": "CAKE",
+			"location": "INCHEON",
+			"occasion": "BIRTHDAY",
+			"title": "Chocolate Ganache Birthday Cake",
+			"price": 46,
+			"count": 6,
+			"desc": "Rich chocolate layers under a glossy ganache, decorated with chocolate pieces and a Happy Birthday message.",
+			"images": [
+				"3bf962dbcded7db2a1754ca23b8b21e4.jpg"
+			]
+		},
+		{
+			"store": "RYAN",
+			"type": "CAKE",
+			"location": "INCHEON",
+			"occasion": "HOLIDAY",
+			"title": "Red Velvet Cupcakes (6 pcs)",
+			"price": 24,
+			"count": 15,
+			"desc": "Six red velvet cupcakes with cream cheese frosting and red velvet crumbs. Packed in a gift box.",
+			"images": [
+				"c58be84a92c5ef89b7614b4e38734499.jpg"
+			]
+		},
+		{
+			"store": "NATHAN",
+			"type": "CAKE",
+			"location": "BUSAN",
+			"occasion": "BIRTHDAY",
+			"title": "Dark Chocolate Cupcakes (6 pcs)",
+			"price": 26,
+			"count": 15,
+			"desc": "Six dark cocoa cupcakes topped with whipped chocolate ganache, made with our own single-origin cacao.",
+			"images": [
+				"d913cf71c799ac2e4e7f15cd1a2bfa08.jpg"
+			]
+		}
+	]
+}
