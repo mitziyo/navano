@@ -67,6 +67,8 @@ const UPDATE = 'mutation Update($input: MemberUpdate!) { updateMember(input: $in
 const FOLLOW = 'mutation Follow($id: String!) { subscribe(input: $id) { _id } }';
 const STORE_TITLES =
 	'query Titles($input: ProductsInquiry!) { getProducts(input: $input) { list { productTitle } } }';
+const STORE_PRODUCTS =
+	'query Products($input: ProductsInquiry!) { getProducts(input: $input) { list { productTitle productImages } } }';
 const CREATE_PRODUCT = 'mutation Create($input: ProductInput!) { createProduct(input: $input) { _id } }';
 
 const data = JSON.parse(await readFile(new URL('./seed-demo.data.json', import.meta.url), 'utf8'));
@@ -175,6 +177,18 @@ if (!IMAGES) {
 		const [memberImage] = await upload([file], 'member', account.token);
 		await gql(UPDATE, { input: { _id: account._id, memberImage } }, account.token);
 		console.log(`+ avatar ${store.nick}`);
+	}
+
+	// Stores are brands, not people: avatarProduct swaps a store's photo for one of its own product photos
+	for (const store of data.stores.filter((item) => item.avatarProduct)) {
+		const account = accounts[store.nick];
+		const { getProducts } = await gql(STORE_PRODUCTS, {
+			input: { page: 1, limit: 100, search: { memberId: account._id } },
+		});
+		const memberImage = getProducts.list.find((item) => item.productTitle === store.avatarProduct)?.productImages?.[0];
+		if (!memberImage || account.image === memberImage) continue;
+		await gql(UPDATE, { input: { _id: account._id, memberImage } }, account.token);
+		console.log(`~ avatar ${store.nick} -> ${store.avatarProduct}`);
 	}
 }
 

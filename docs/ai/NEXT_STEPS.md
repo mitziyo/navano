@@ -19,6 +19,14 @@
 | 4 | F3: pages `property` → `product`, `agent` → `store`, components, filters |
 | 5 | F4: i18n `en`/`kr`/`ru`, admin panel |
 
+## Store identity (`navano-client`)
+Stores are brands, not people: their avatar should be a logo or a signature product, not a portrait (demo stores already use product photos, set by `scripts/seed-demo.mjs` `avatarProduct`).
+
+| # | Task | Notes |
+|---|---|---|
+| 1 | Square store avatars | Show `AGENT` avatars as a rounded square (logo style) in store cards, store page, navbar and comments; customers keep the round avatar |
+| 2 | Avatar hint for stores | Next to the photo upload on My Page, stores see "Upload your logo or a signature product photo" (i18n `en` / `kr` / `ru`) |
+
 ## Testing
 | # | Task |
 |---|---|

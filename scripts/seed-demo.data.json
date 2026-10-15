@@ -6,15 +6,18 @@
 		},
 		{
 			"nick": "KEVIN",
-			"type": "AGENT"
+			"type": "AGENT",
+			"avatarProduct": "Chocolate Truffle Gift Box"
 		},
 		{
 			"nick": "RYAN",
-			"type": "AGENT"
+			"type": "AGENT",
+			"avatarProduct": "Chocolate Ganache Birthday Cake"
 		},
 		{
 			"nick": "NATHAN",
-			"type": "AGENT"
+			"type": "AGENT",
+			"avatarProduct": "Single-Origin Bonbon Collection"
 		},
 		{
 			"nick": "SOFIA",
