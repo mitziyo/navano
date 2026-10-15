@@ -20,16 +20,20 @@ describe('AssistantService', () => {
 	};
 
 	let getProducts: jest.Mock;
-	let create: jest.Mock;
+	let generateContent: jest.Mock;
 	let service: AssistantService;
 
+	const modelTurn = (parts: unknown[]) => ({
+		candidates: [{ finishReason: 'STOP', content: { role: 'model', parts } }],
+	});
+
 	const setClient = () => {
-		(service as unknown as { client: unknown }).client = { beta: { messages: { create } } };
+		(service as unknown as { client: unknown }).client = { models: { generateContent } };
 	};
 
 	beforeEach(() => {
 		getProducts = jest.fn().mockResolvedValue({ list: [product], metaCounter: [{ total: 1 }] });
-		create = jest.fn();
+		generateContent = jest.fn();
 		service = new AssistantService(
 			{ getProducts, getProductFacets: jest.fn() } as unknown as ProductService,
 			{ getAgents: jest.fn() } as unknown as MemberService,
@@ -38,22 +42,20 @@ describe('AssistantService', () => {
 	});
 
 	it('runs search_products with sanitized filters and returns product cards', async () => {
-		create
-			.mockResolvedValueOnce({
-				stop_reason: 'tool_use',
-				content: [
+		generateContent
+			.mockResolvedValueOnce(
+				modelTurn([
 					{
-						type: 'tool_use',
-						id: 'tu1',
-						name: 'search_products',
-						input: { types: ['FLOWER', 'HOUSE'], occasions: ['BIRTHDAY'], locations: ['SEOUL'], max_price: 100000 },
+						functionCall: {
+							id: 'fc1',
+							name: 'search_products',
+							args: { types: ['FLOWER', 'HOUSE'], occasions: ['BIRTHDAY'], locations: ['SEOUL'], max_price: 100000 },
+						},
+						thoughtSignature: 'sig',
 					},
-				],
-			})
-			.mockResolvedValueOnce({
-				stop_reason: 'end_turn',
-				content: [{ type: 'text', text: 'Try Red Roses for ₩50,000.' }],
-			});
+				]),
+			)
+			.mockResolvedValueOnce(modelTurn([{ text: 'Try Red Roses for ₩50,000.' }]));
 
 		const reply = await service.askAssistant(memberId, ask);
 
@@ -71,13 +73,17 @@ describe('AssistantService', () => {
 		});
 		expect(reply).toEqual({ text: 'Try Red Roses for ₩50,000.', products: [product] });
 
-		const secondCall = (create.mock.calls[1] as [{ messages: { content: unknown[] }[] }])[0];
-		expect(secondCall.messages).toHaveLength(3);
-		expect(secondCall.messages[2].content[0]).toMatchObject({ type: 'tool_result', tool_use_id: 'tu1' });
+		const secondCall = (generateContent.mock.calls[1] as [{ contents: { role: string; parts: unknown[] }[] }])[0];
+		expect(secondCall.contents).toHaveLength(3);
+		expect(secondCall.contents[1]).toMatchObject({ role: 'model', parts: [{ thoughtSignature: 'sig' }] });
+		expect(secondCall.contents[2]).toMatchObject({
+			role: 'user',
+			parts: [{ functionResponse: { id: 'fc1', name: 'search_products' } }],
+		});
 	});
 
-	it('returns a fixed reply on refusal', async () => {
-		create.mockResolvedValueOnce({ stop_reason: 'refusal', content: [] });
+	it('returns a fixed reply when the answer is blocked', async () => {
+		generateContent.mockResolvedValueOnce({ candidates: [{ finishReason: 'SAFETY', content: { parts: [] } }] });
 
 		const reply = await service.askAssistant(memberId, ask);
 
@@ -85,8 +91,28 @@ describe('AssistantService', () => {
 		expect(reply.text).toContain('flowers, chocolates or cakes');
 	});
 
+	it('turns tools off in the last round so the model answers in text', async () => {
+		const call = modelTurn([{ functionCall: { id: 'fc', name: 'search_products', args: {} } }]);
+		generateContent
+			.mockResolvedValueOnce(call)
+			.mockResolvedValueOnce(call)
+			.mockResolvedValueOnce(call)
+			.mockResolvedValueOnce(call)
+			.mockResolvedValueOnce(modelTurn([{ text: 'Here are some bouquets.' }]));
+
+		const reply = await service.askAssistant(memberId, ask);
+
+		const configs = generateContent.mock.calls.map(
+			(args) => (args as [{ config: { toolConfig?: unknown } }])[0].config,
+		);
+		expect(configs).toHaveLength(5);
+		expect(configs.slice(0, 4).every((config) => config.toolConfig === undefined)).toBe(true);
+		expect(configs[4].toolConfig).toEqual({ functionCallingConfig: { mode: 'NONE' } });
+		expect(reply.text).toBe('Here are some bouquets.');
+	});
+
 	it('limits requests per member per hour', async () => {
-		create.mockResolvedValue({ stop_reason: 'end_turn', content: [{ type: 'text', text: 'Hi!' }] });
+		generateContent.mockResolvedValue(modelTurn([{ text: 'Hi!' }]));
 
 		for (let i = 0; i < ASSISTANT_HOURLY_LIMIT; i++) await service.askAssistant(memberId, ask);
 
@@ -102,16 +128,16 @@ describe('AssistantService', () => {
 				],
 			}),
 		).rejects.toThrow(BadRequestException);
-		expect(create).not.toHaveBeenCalled();
+		expect(generateContent).not.toHaveBeenCalled();
 	});
 
 	it('is unavailable without an API key', async () => {
-		const key = process.env.ANTHROPIC_API_KEY;
-		delete process.env.ANTHROPIC_API_KEY;
+		const key = process.env.GEMINI_API_KEY;
+		delete process.env.GEMINI_API_KEY;
 		(service as unknown as { client: unknown }).client = null;
 
 		await expect(service.askAssistant(memberId, ask)).rejects.toThrow(InternalServerErrorException);
 
-		if (key !== undefined) process.env.ANTHROPIC_API_KEY = key;
+		if (key !== undefined) process.env.GEMINI_API_KEY = key;
 	});
 });

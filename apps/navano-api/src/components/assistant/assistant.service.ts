@@ -1,5 +1,14 @@
 import { BadRequestException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
-import Anthropic from '@anthropic-ai/sdk';
+import {
+	ApiError,
+	BlockedReason,
+	Content,
+	FinishReason,
+	FunctionCallingConfigMode,
+	FunctionDeclaration,
+	GoogleGenAI,
+	Part,
+} from '@google/genai';
 import type { ObjectId } from 'mongoose';
 import { ProductService } from '../product/product.service';
 import { MemberService } from '../member/member.service';
@@ -9,7 +18,9 @@ import { Message } from '../../libs/enums/common.enum';
 import { ProductLocation, ProductOccasion, ProductType } from '../../libs/enums/product.enum';
 import { Member } from '../../libs/dto/member/member';
 
-export const ASSISTANT_MODEL = 'claude-opus-5-5';
+// Flash-Lite: the free tier allows only 5 requests per minute on Flash, and one reply can take up to 5 requests.
+// GEMINI_MODEL overrides it when Google renames or retires the alias
+export const ASSISTANT_MODEL = 'gemini-flash-lite-latest';
 export const ASSISTANT_HOURLY_LIMIT = 20;
 const MAX_TOOL_ROUNDS = 4;
 const MAX_CARDS = 4;
@@ -19,7 +30,7 @@ const TYPES = Object.values(ProductType);
 const OCCASIONS = Object.values(ProductOccasion);
 const LOCATIONS = Object.values(ProductLocation);
 
-// Frozen text: no dates or ids, so the prompt cache stays valid across requests
+// Frozen text: no dates or ids, so implicit prompt caching stays valid across requests
 const SYSTEM_PROMPT = `You are Navano AI, the shopping assistant of Navano, a marketplace where local stores in South Korea sell flowers, chocolates and cakes.
 
 How to help:
@@ -27,18 +38,19 @@ How to help:
 - Before you recommend or mention any product or store, look it up with the tools. Never invent products, stores, prices or stock.
 - Write prices with a $ sign, the way the site shows them (e.g. $120). Product types: FLOWER, CHOCOLATE, CAKE. Occasions: BIRTHDAY, WEDDING, ANNIVERSARY, HOLIDAY. Cities: ${LOCATIONS.join(', ')}.
 - The products you found are shown to the customer as cards under your reply, so refer to them by name and price and do not paste links or ids.
+- Write product and store names exactly as the tools return them: never translate or transliterate them.
 - If nothing matches, say so and suggest the closest alternative (another city, type or a wider budget).
 - Navano cannot take orders or payments in this chat. For orders, delivery, payments or account problems, point the customer to the Customer Service page (/cs).
 - Stay on topic: gifts, flowers, chocolates, cakes and using Navano. Politely decline anything else.
 
 Style: reply in the customer's language (English, Korean or Russian). Keep replies short and warm: two to five sentences or a short list. Plain text only, no markdown headings or tables.`;
 
-const TOOLS: Anthropic.Beta.BetaTool[] = [
+const TOOLS: FunctionDeclaration[] = [
 	{
 		name: 'search_products',
 		description:
 			'Search ACTIVE products on Navano. All filters are optional and combined with AND. Returns up to 6 products sorted by popularity, plus the total number of matches.',
-		input_schema: {
+		parametersJsonSchema: {
 			type: 'object',
 			properties: {
 				types: { type: 'array', items: { type: 'string', enum: TYPES }, description: 'Product types' },
@@ -55,7 +67,7 @@ const TOOLS: Anthropic.Beta.BetaTool[] = [
 		name: 'search_stores',
 		description:
 			'Search stores (sellers) on Navano by name, city or the product types they sell. Returns up to 5 stores.',
-		input_schema: {
+		parametersJsonSchema: {
 			type: 'object',
 			properties: {
 				text: { type: 'string', description: 'Store name or nickname' },
@@ -69,11 +81,20 @@ const TOOLS: Anthropic.Beta.BetaTool[] = [
 		name: 'get_catalog_overview',
 		description:
 			'Number of ACTIVE products in total and per type, occasion and city. Use it to answer "what do you have" questions.',
-		input_schema: { type: 'object', properties: {}, additionalProperties: false },
+		parametersJsonSchema: { type: 'object', properties: {}, additionalProperties: false },
 	},
 ];
 
 type ToolInput = Record<string, unknown>;
+
+// Stops that mean the model or Google's filters declined to answer
+const BLOCKED_FINISH = new Set<FinishReason | undefined>([
+	FinishReason.SAFETY,
+	FinishReason.BLOCKLIST,
+	FinishReason.PROHIBITED_CONTENT,
+	FinishReason.SPII,
+]);
+const REFUSAL_TEXT = "Sorry, I can't help with that. I can help you find flowers, chocolates or cakes.";
 
 // Keeps only allowed enum values from model input
 const pickEnums = <E extends string>(value: unknown, allowed: E[]): E[] | undefined => {
@@ -92,7 +113,7 @@ const pickPrice = (value: unknown): number | undefined =>
 export class AssistantService {
 	private readonly logger = new Logger(AssistantService.name);
 	private readonly usage = new Map<string, number[]>();
-	private client: Anthropic | null = null;
+	private client: GoogleGenAI | null = null;
 
 	constructor(
 		private readonly productService: ProductService,
@@ -101,66 +122,72 @@ export class AssistantService {
 
 	public async askAssistant(memberId: ObjectId, input: AssistantInput): Promise<AssistantReply> {
 		const client = this.getClient();
-		const messages = this.toMessages(input);
-		if (!messages.length) throw new BadRequestException(Message.BAD_REQUEST);
+		const contents = this.toContents(input);
+		if (!contents.length) throw new BadRequestException(Message.BAD_REQUEST);
 		this.checkLimit(JSON.stringify(memberId));
 
 		let cards: Product[] = [];
 
 		try {
 			for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
-				const response = await client.beta.messages.create({
-					model: ASSISTANT_MODEL,
-					max_tokens: 4000,
-					output_config: { effort: 'low' },
-					betas: ['server-side-fallback-2026-07-01'],
-					fallbacks: 'default',
-					system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
-					tools: TOOLS,
-					messages,
+				const response = await client.models.generateContent({
+					model: process.env.GEMINI_MODEL || ASSISTANT_MODEL,
+					contents,
+					config: {
+						systemInstruction: SYSTEM_PROMPT,
+						tools: [{ functionDeclarations: TOOLS }],
+						// Last round: no more tool calls, so the model has to answer in text
+						toolConfig:
+							round === MAX_TOOL_ROUNDS
+								? { functionCallingConfig: { mode: FunctionCallingConfigMode.NONE } }
+								: undefined,
+						maxOutputTokens: 4000,
+					},
 				});
 
-				if (response.stop_reason === 'refusal') {
-					return {
-						text: "Sorry, I can't help with that. I can help you find flowers, chocolates or cakes.",
-						products: [],
-					};
+				const candidate = response.candidates?.[0];
+				if (
+					(response.promptFeedback?.blockReason &&
+						response.promptFeedback.blockReason !== BlockedReason.BLOCKED_REASON_UNSPECIFIED) ||
+					BLOCKED_FINISH.has(candidate?.finishReason)
+				) {
+					return { text: REFUSAL_TEXT, products: [] };
 				}
 
-				const toolUses = response.content.filter(
-					(block): block is Anthropic.Beta.BetaToolUseBlock => block.type === 'tool_use',
-				);
+				const parts = candidate?.content?.parts ?? [];
+				const calls = parts.flatMap((part) => (part.functionCall ? [part.functionCall] : []));
 
 				// Last round has no room for more tool calls: answer with what we have
-				if (response.stop_reason !== 'tool_use' || !toolUses.length || round === MAX_TOOL_ROUNDS) {
-					const text = response.content
-						.filter((block): block is Anthropic.Beta.BetaTextBlock => block.type === 'text')
-						.map((block) => block.text)
+				if (!calls.length || round === MAX_TOOL_ROUNDS) {
+					const text = parts
+						.filter((part) => part.text && !part.thought)
+						.map((part) => part.text)
 						.join('\n')
 						.trim();
 					return { text: text || "Sorry, I couldn't answer that. Please try asking another way.", products: cards };
 				}
 
-				messages.push({ role: 'assistant', content: response.content });
+				// Send the model turn back unchanged: its parts carry the thought signatures Gemini needs
+				contents.push({ role: 'model', parts });
 
-				const results: Anthropic.Beta.BetaToolResultBlockParam[] = [];
-				for (const toolUse of toolUses) {
+				const results: Part[] = [];
+				for (const call of calls) {
+					const name = call.name ?? '';
 					try {
-						const { content, products } = await this.runTool(memberId, toolUse.name, toolUse.input as ToolInput);
+						const { content, products } = await this.runTool(memberId, name, call.args ?? {});
 						if (products) cards = products.slice(0, MAX_CARDS);
-						results.push({ type: 'tool_result', tool_use_id: toolUse.id, content });
+						results.push({ functionResponse: { id: call.id, name, response: { output: content } } });
 					} catch (err) {
-						this.logger.warn(`Tool ${toolUse.name} failed: ${(err as Error).message}`);
-						results.push({ type: 'tool_result', tool_use_id: toolUse.id, content: 'Search failed.', is_error: true });
+						this.logger.warn(`Tool ${name} failed: ${(err as Error).message}`);
+						results.push({ functionResponse: { id: call.id, name, response: { error: 'Search failed.' } } });
 					}
 				}
-				messages.push({ role: 'user', content: results });
+				contents.push({ role: 'user', parts: results });
 			}
 		} catch (err) {
-			if (err instanceof Anthropic.RateLimitError) {
-				this.logger.warn('Claude API rate limit');
-			} else if (err instanceof Anthropic.APIError) {
-				this.logger.error(`Claude API error ${err.status}: ${err.message}`);
+			if (err instanceof ApiError) {
+				if (err.status === 429) this.logger.warn('Gemini API rate limit');
+				else this.logger.error(`Gemini API error ${err.status}: ${err.message}`);
 			} else {
 				throw err;
 			}
@@ -170,10 +197,17 @@ export class AssistantService {
 		throw new InternalServerErrorException(Message.ASSISTANT_UNAVAILABLE);
 	}
 
-	private getClient(): Anthropic {
+	private getClient(): GoogleGenAI {
 		if (this.client) return this.client;
-		if (!process.env.ANTHROPIC_API_KEY) throw new InternalServerErrorException(Message.ASSISTANT_UNAVAILABLE);
-		this.client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY, timeout: 60_000 });
+		if (!process.env.GEMINI_API_KEY) throw new InternalServerErrorException(Message.ASSISTANT_UNAVAILABLE);
+		this.client = new GoogleGenAI({
+			apiKey: process.env.GEMINI_API_KEY,
+			// Free tier models often answer 503 "high demand" for a moment; 429 (quota) is not retried
+			httpOptions: {
+				timeout: 60_000,
+				retryOptions: { attempts: 3, initialDelay: 1, maxDelay: 4, httpStatusCodes: [500, 502, 503, 504] },
+			},
+		});
 		return this.client;
 	}
 
@@ -186,8 +220,8 @@ export class AssistantService {
 		this.usage.set(memberKey, recent);
 	}
 
-	// Client history → API messages: starts with a user turn, ends with a user turn, roles alternate
-	private toMessages(input: AssistantInput): Anthropic.Beta.BetaMessageParam[] {
+	// Client history → API contents: starts with a user turn, ends with a user turn, roles alternate
+	private toContents(input: AssistantInput): Content[] {
 		const turns: { role: 'user' | 'assistant'; text: string }[] = [];
 		for (const turn of input.messages) {
 			const text = turn.text.trim();
@@ -198,7 +232,7 @@ export class AssistantService {
 			else turns.push({ role: turn.role, text });
 		}
 		if (!turns.length || turns[turns.length - 1].role !== 'user') return [];
-		return turns.map((turn) => ({ role: turn.role, content: turn.text }));
+		return turns.map((turn) => ({ role: turn.role === 'assistant' ? 'model' : 'user', parts: [{ text: turn.text }] }));
 	}
 
 	private async runTool(
