@@ -11,9 +11,20 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { MemberUpdate } from '../../libs/dto/member/member.update';
 import { getSerialForImage, shapeIntoMongoObjectId, validMimeTypes } from '../../libs/config';
+
+// Upload folders a client may write to; anything else (e.g. "../") is rejected
+const UPLOAD_TARGETS = ['member', 'product', 'article'];
+
+// uploads/ is not in git, so a fresh server has no folders yet
+const uploadDir = (target: string): string => {
+	if (!UPLOAD_TARGETS.includes(target)) throw new Error(Message.BAD_REQUEST);
+	const dir = `uploads/${target}`;
+	mkdirSync(dir, { recursive: true });
+	return dir;
+};
 import { WithoutGuard } from '../auth/guards/without.guard';
 import { GraphQLUpload, FileUpload } from 'graphql-upload';
-import { createWriteStream } from 'fs';
+import { createWriteStream, mkdirSync } from 'fs';
 import { Message } from '../../libs/enums/common.enum';
 
 @Resolver()
@@ -130,14 +141,14 @@ export class MemberResolver {
 		if (!validMime) throw new Error(Message.PROVIDE_ALLOWED_FORMAT);
 
 		const imageName = getSerialForImage(filename);
-		const url = `uploads/${target}/${imageName}`;
+		const url = `${uploadDir(String(target))}/${imageName}`;
 		const stream = createReadStream();
 
 		const result = await new Promise((resolve, reject) => {
 			stream
 				.pipe(createWriteStream(url))
-				.on('finish', async () => resolve(true))
-				.on('error', () => reject(false));
+				.on('finish', () => resolve(true))
+				.on('error', () => reject(new Error(Message.UPLOAD_FAILED)));
 		});
 		if (!result) throw new Error(Message.UPLOAD_FAILED);
 
@@ -152,6 +163,7 @@ export class MemberResolver {
 		@Args('target') target: String,
 	): Promise<string[]> {
 		console.log('Mutation: imagesUploader');
+		const dir = uploadDir(String(target));
 
 		const uploadedImages: string[] = [];
 		const promisedList = files.map(async (img: Promise<FileUpload>, index: number): Promise<void> => {
@@ -162,14 +174,14 @@ export class MemberResolver {
 				if (!validMime) throw new Error(Message.PROVIDE_ALLOWED_FORMAT);
 
 				const imageName = getSerialForImage(filename);
-				const url = `uploads/${target}/${imageName}`;
+				const url = `${dir}/${imageName}`;
 				const stream = createReadStream();
 
 				const result = await new Promise((resolve, reject) => {
 					stream
 						.pipe(createWriteStream(url))
 						.on('finish', () => resolve(true))
-						.on('error', () => reject(false));
+						.on('error', () => reject(new Error(Message.UPLOAD_FAILED)));
 				});
 				if (!result) throw new Error(Message.UPLOAD_FAILED);
 
