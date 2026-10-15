@@ -11,6 +11,7 @@ import { AssistantModule } from './assistant/assistant.module';
 import { NoticeModule } from './notice/notice.module';
 import { InquiryModule } from './inquiry/inquiry.module';
 import { NotificationModule } from './notification/notification.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
 	imports: [
@@ -26,6 +27,7 @@ import { NotificationModule } from './notification/notification.module';
 		NoticeModule,
 		InquiryModule,
 		NotificationModule,
+		DashboardModule,
 	],
 })
 export class ComponentsModule {}
