@@ -9,6 +9,7 @@ import { ComponentsModule } from './components/components.module';
 import { DatabaseModule } from './database/database.module';
 import { T } from './libs/types/common';
 import { SocketModule } from './socket/socket.module';
+import type { Request, Response } from 'express';
 
 @Module({
 	imports: [
@@ -19,6 +20,7 @@ import { SocketModule } from './socket/socket.module';
 			playground: true,
 			uploads: false,
 			autoSchemaFile: true,
+			context: ({ req, res }: { req: Request; res: Response }) => ({ req, res }), // res: refresh cookie in login / refreshToken / logout
 			formatError: (error: T) => {
 				const graphqlFormattedError = {
 					extensions: { code: error?.extensions?.code },

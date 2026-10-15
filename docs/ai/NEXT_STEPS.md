@@ -7,7 +7,6 @@ Updated 2026-10-15. Phase 2 (Product), the client migration, CS, notifications, 
 |---|---|---|
 | 1 | **Rotate the MongoDB Atlas password** | The `.env` value was exposed in a session transcript |
 | 2 | Valid `ANTHROPIC_API_KEY` | The current local value is not an Anthropic key (401), so Navano AI answers "unavailable" |
-| 3 | Refresh token flow | Short access token + httpOnly refresh cookie with rotation (D16) |
 
 ## Deploy preparation
 | # | Task | Notes |

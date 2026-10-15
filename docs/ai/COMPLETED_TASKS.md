@@ -457,3 +457,38 @@ The old FREE articles were removed from the dev DB. Photos stay outside git (`D:
 
 Validation for the session: api tsc 0, jest 36 passed, eslint below the 397 baseline; client `tsc --noEmit` 0; 53 / 53 Apollo operations validate against the live schema.
 
+
+## 27. Refresh token flow (2026-10-15, D16)
+
+### Backend (`navano-api`)
+
+| Area | Change |
+|---|---|
+| `auth.module.ts` | Access token `30d` → `15m`; registers `Session` |
+| `schemas/Session.model.ts` (new) | `sessions`: `memberId`, `tokenHash` (sha256, unique), `expiresAt` (TTL index) |
+| `auth.service.ts` | `issueRefreshToken` (random 32 bytes → hash saved, `nv_rt` cookie), `rotateRefreshToken` (one use: deletes the session, issues a new one; missing / expired → clears the cookie, 401), `revokeRefreshToken`. The cookie is read from `req.headers.cookie` (no new dependency) |
+| `member.resolver.ts` | `login` / `signup` set the cookie; new `refreshToken` (returns `Member` + `accessToken`) and `logout` (`Boolean`) |
+| `member.service.ts` | `getSessionMember`: ACTIVE members only, otherwise 401 |
+| `app.module.ts` | GraphQL context passes `res` |
+| Tests | `auth.service.spec.ts`: hash only + httpOnly cookie, rotation (old token works once), missing / expired token, logout |
+
+### Frontend (`navano-client`)
+
+| Area | Change |
+|---|---|
+| `libs/auth/index.ts` | `getJwtToken` keeps an expired token (it marks a session to renew); `refreshSession` (one shared request over `fetch` with `credentials: 'include'`; on failure it uses a token another tab stored, else `expireSession`); `getFreshJwtToken`; `restoreSession` renews an expired token; `logOut` calls `logout` first |
+| `apollo/client.ts` | Auth link is an async `setContext` that renews an expired token before the request; upload link sends cookies |
+| `apollo/user/mutation.ts` | `REFRESH_TOKEN`, `LOGOUT` |
+
+### Validation
+
+| Check | Result |
+|---|---|
+| `npx tsc --noEmit` api / batch | 0 / 0 |
+| `npx jest apps/navano-api/src` | 40 passed |
+| `npx eslint "apps/**/*.ts"` | 386 (unchanged) |
+| Client `yarn tsc --noEmit` | 0 |
+| Live API (curl) | signup and login set an httpOnly `nv_rt` cookie (`path=/graphql`); `refreshToken` rotates the cookie and the new token passes `checkAuth`; the old cookie → 401; after `logout` the cookie is cleared and refresh → 401; token lifetime 900 s |
+| Headless Chrome | `/mypage` hard load with an expired token: one `RefreshToken` request, new token stored, page stays on `/mypage`; a guest page load sends no `RefreshToken` |
+
+A test member `rt033274` (USER) was created in the dev DB for the live check.

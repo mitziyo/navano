@@ -19,7 +19,7 @@ Format: Decision / Why / Risks / Alternatives considered. Status shows whether t
 | D13 | CS content in `notices` by category, 1:1 inquiries in their own collection | Applied |
 | D14 | Notifications are written by the services and read by polling | Applied |
 | D15 | One responsive layout instead of separate mobile pages | Applied |
-| D16 | One 30-day access token, no refresh token for now | Applied |
+| D16 | 15-minute access token + rotating httpOnly refresh cookie | Applied |
 
 ---
 
@@ -98,7 +98,7 @@ Format: Decision / Why / Risks / Alternatives considered. Status shows whether t
 - **Risks:** New page styles must add their rules to `responsive.scss`; wide admin tables scroll inside their cards on phones.
 - **Alternatives:** Finish the separate mobile pages (double the UI work).
 
-### D16. One 30-day access token, no refresh token for now
-- **Why:** Fixing the real bugs (secret read at startup, 401 on bad tokens, one session restore, logout on 401) covered the current needs; the user chose to keep one token on 2026-10-14.
-- **Risks:** A stolen token is valid for up to 30 days and cannot be revoked server-side.
-- **Alternatives:** Short access token + httpOnly refresh cookie with rotation (listed in `NEXT_STEPS.md`, before a public launch).
+### D16. 15-minute access token + rotating httpOnly refresh cookie
+- **Why:** A stolen 30-day token could not be revoked (the first version of D16, 2026-10-14). Since 2026-10-15 the access token lives 15 minutes. `login` / `signup` also set the `nv_rt` cookie (httpOnly, `sameSite: lax`, `secure` in production, `path: /graphql`, 30 days). `refreshToken` uses the cookie once: the session is deleted and a new cookie is set (rotation). `logout` deletes the session. Sessions live in `sessions` (sha256 hash of the token, TTL index), one per device. The guards are unchanged: they still read the `Authorization` header.
+- **Risks:** An access token that leaks stays valid for up to 15 minutes. The WebSocket token is checked only on connect. The client and API must stay same-site (`localhost` ↔ `localhost`, or one domain in production), or the `lax` cookie is not sent.
+- **Alternatives:** Refresh token in `localStorage` (readable by any XSS); one session field on the member (logs out the other devices).

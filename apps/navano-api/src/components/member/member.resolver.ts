@@ -1,5 +1,7 @@
-import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
+import { Args, Context, Mutation, Query, Resolver } from '@nestjs/graphql';
+import type { Request, Response } from 'express';
 import { MemberService } from './member.service';
+import { AuthService } from '../auth/auth.service';
 import { AgentsInquiry, LoginInput, MemberInput, MembersInquiry } from '../../libs/dto/member/member.input';
 import { Member, Members } from '../../libs/dto/member/member';
 import { UseGuards } from '@nestjs/common';
@@ -29,20 +31,40 @@ import { Message } from '../../libs/enums/common.enum';
 
 @Resolver()
 export class MemberResolver {
-	constructor(private readonly memberService: MemberService) {}
+	constructor(
+		private readonly memberService: MemberService,
+		private readonly authService: AuthService,
+	) {}
 
 	@Mutation(() => Member)
-	public async signup(@Args('input') input: MemberInput): Promise<Member> {
+	public async signup(@Args('input') input: MemberInput, @Context('res') res: Response): Promise<Member> {
 		console.log('Mutation: signup');
-		return await this.memberService.signup(input);
+		const member = await this.memberService.signup(input);
+		await this.authService.issueRefreshToken(member._id, res);
+		return member;
 	}
 
 	///////////////////////////////
 
 	@Mutation(() => Member)
-	public async login(@Args('input') input: LoginInput): Promise<Member> {
+	public async login(@Args('input') input: LoginInput, @Context('res') res: Response): Promise<Member> {
 		console.log('Mutation: login');
-		return await this.memberService.login(input);
+		const member = await this.memberService.login(input);
+		await this.authService.issueRefreshToken(member._id, res);
+		return member;
+	}
+
+	// Reads the httpOnly refresh cookie, rotates it and returns a new access token
+	@Mutation(() => Member)
+	public async refreshToken(@Context('req') req: Request, @Context('res') res: Response): Promise<Member> {
+		const memberId = await this.authService.rotateRefreshToken(req, res);
+		return await this.memberService.getSessionMember(memberId);
+	}
+
+	@Mutation(() => Boolean)
+	public async logout(@Context('req') req: Request, @Context('res') res: Response): Promise<boolean> {
+		await this.authService.revokeRefreshToken(req, res);
+		return true;
 	}
 
 	@UseGuards(AuthGuard)

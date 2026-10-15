@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, PipelineStage } from 'mongoose';
 import { Member, Members } from '../../libs/dto/member/member';
@@ -80,6 +80,16 @@ export class MemberService {
 			console.log('ERROR on signup service model', err);
 			throw new BadRequestException(err);
 		}
+	}
+
+	// Member behind a refresh token; a blocked or deleted member gets no new access token
+	public async getSessionMember(memberId: ObjectId): Promise<Member> {
+		const result: Member | null = await this.memberModel
+			.findOne({ _id: memberId, memberStatus: MemberStatus.ACTIVE })
+			.exec();
+		if (!result) throw new UnauthorizedException(Message.NOT_AUTHENTICATED);
+		result.accessToken = await this.authService.createToken(result);
+		return result;
 	}
 
 	public async updateMember(memberId: ObjectId, input: MemberUpdate): Promise<Member> {
