@@ -96,7 +96,9 @@ Selection sets: remove `propertySquare/Beds/Rooms/Barter/Rent` and `constructedA
 
 ## Remaining work
 
-- **Wire the UI to the API.** The Apollo operations exist, but no page or component calls `useQuery` / `useMutation` yet. Lists use empty local state, and `AddNewProduct` insert/update handlers are empty stubs.
-- **Type banner images:** add `public/img/banner/types/{flower,chocolate,cake}.webp`. Until then `HeaderFilter` shows a fallback background colour.
-- **Real-estate leftovers in the UI:** `about` page copy, FAQ content, the "Floor Plans" block on product detail, static images `/img/property/*` and `apartmentMain.png`.
+Updated 2026-10-15. Done since the first version of this list: the UI is wired to the API (§9 onward); the real-estate leftovers (about copy, FAQ, Floor Plans, `/img/property/*`, `apartmentMain.png`) are gone; FAQ, notices and terms come from the CS API; mobile is one responsive layout (D15).
+
+- **Type banner images:** `public/img/banner/types/` still holds `apartment` / `house` / `villa.webp`; add `{flower,chocolate,cake}.webp` and remove the old files.
 - **Lint:** the project has no ESLint config, so `next lint` cannot run without interactive setup.
+- **Store identity:** square store avatars and an avatar hint for stores (`NEXT_STEPS.md`).
+- **Orders and cart:** Phase 3 (D9).

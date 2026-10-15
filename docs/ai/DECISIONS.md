@@ -16,6 +16,10 @@ Format: Decision / Why / Risks / Alternatives considered. Status shows whether t
 | D10 | Use a fresh dev DB for Phase 2 instead of migrating data | Recommended |
 | D11 | `navanoo.pdf` data model is the schema source of truth | Agreed |
 | D12 | Navano AI uses the Claude API from `navano-api` only | Applied |
+| D13 | CS content in `notices` by category, 1:1 inquiries in their own collection | Applied |
+| D14 | Notifications are written by the services and read by polling | Applied |
+| D15 | One responsive layout instead of separate mobile pages | Applied |
+| D16 | One 30-day access token, no refresh token for now | Applied |
 
 ---
 
@@ -78,3 +82,23 @@ Format: Decision / Why / Risks / Alternatives considered. Status shows whether t
 - **Why:** The API key must never reach the browser. The backend already owns the data the assistant needs (`getProducts`, `getAgents`, `getProductFacets`), so the tools reuse those services and the client only calls one GraphQL mutation (`askAssistant`). Model `claude-opus-5-5` (chosen by the user on 2026-10-14), effort `low`, no streaming in the first version.
 - **Risks:** API cost per message. Mitigated by logged-in members only, 20 requests per member per hour (in memory, per process), at most 12 history turns of 1000 characters, and at most 4 tool rounds per reply.
 - **Alternatives:** Calling the API from Next.js (exposes the key or needs a separate proxy); streaming over SSE (better feel, more moving parts; can come later).
+
+### D13. CS content in `notices` by category, 1:1 inquiries in their own collection
+- **Why:** Notices, FAQ and terms share one shape (title, content, status, topic), so one `notices` collection with `NoticeCategory` = `NOTICE / FAQ / TERMS` serves all three tabs; events are a `NoticeTopic`. Inquiries have an owner, an answer and a WAIT / ANSWERED life cycle, so they get `inquiries` (decided with the user on 2026-10-14: full CS API).
+- **Risks:** FAQ reuses `noticeTitle` / `noticeContent` as question / answer. FAQ-only fields (ordering, groups) would need new fields.
+- **Alternatives:** Keep the static client arrays (no admin editing); one collection for inquiries too (mixes public content with private messages).
+
+### D14. Notifications are written by the services and read by polling
+- **Why:** The like, comment and follow services already know the receiver, so they call `NotificationService` directly; self-actions are skipped and an undone like removes its notification. The client polls `getUnreadNotifications` every 30 s while the tab is visible (user's choice on 2026-10-14).
+- **Risks:** Up to 30 s delay; one small request per open tab every 30 s.
+- **Alternatives:** Push over the existing WebSocket gateway (instant, more code on both sides; can come later).
+
+### D15. One responsive layout instead of separate mobile pages
+- **Why:** The `device === 'mobile'` branches were Nestar stubs with no real mobile design. One `#pc-wrap` layout reflowed by `scss/pc/responsive.scss` (≤1023 / ≤767 / ≤480 px) keeps one code path (user's choice on 2026-10-14).
+- **Risks:** New page styles must add their rules to `responsive.scss`; wide admin tables scroll inside their cards on phones.
+- **Alternatives:** Finish the separate mobile pages (double the UI work).
+
+### D16. One 30-day access token, no refresh token for now
+- **Why:** Fixing the real bugs (secret read at startup, 401 on bad tokens, one session restore, logout on 401) covered the current needs; the user chose to keep one token on 2026-10-14.
+- **Risks:** A stolen token is valid for up to 30 days and cannot be revoked server-side.
+- **Alternatives:** Short access token + httpOnly refresh cookie with rotation (listed in `NEXT_STEPS.md`, before a public launch).

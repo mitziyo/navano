@@ -372,5 +372,88 @@ Validation: tsc api / batch 0 / 0; jest 16 passed (5 new); eslint 397 (baseline)
 
 Validation: `yarn tsc --noEmit` 0; SCSS (pc, app) compiles; headless Chrome 1440: logged out (light), logged in (light, dark), error reply shown once in the panel; `/`, `/kr`, `/ru`, `/product`, `/agent` 200; no console errors. Not tested: real replies (no `ANTHROPIC_API_KEY` yet). Mobile not covered.
 
-Found, not fixed: `auth.module.ts` registers `JwtModule` with `${process.env.SECRET_TOKEN}` at import time, before `ConfigModule` loads `.env`, so the running API signs and verifies tokens with the string `"undefined"`. Anyone can forge a token for any member, including ADMIN.
+Found here, fixed in §20: `auth.module.ts` registered `JwtModule` with `${process.env.SECRET_TOKEN}` at import time, before `ConfigModule` loaded `.env`, so the API signed and verified tokens with the string `"undefined"`.
+
+## 20. Auth and session fixes (2026-10-15)
+
+### Backend (`navano-api`, `bf96d76`)
+
+| Area | Change |
+|---|---|
+| `auth.module.ts` | `JwtModule.registerAsync` reads `SECRET_TOKEN` when the app starts; boot fails when it is missing. Every member had to log in again once |
+| `auth.service.ts` `verifyToken` | An expired or bad token → `UnauthorizedException` (401) instead of a server error |
+| Tests | `auth.service.spec.ts`: valid, expired, wrong secret |
+
+### Frontend (`navano-client`, `a8da292`)
+
+| Area | Change |
+|---|---|
+| `libs/auth/index.ts` | `isTokenExpired`, one `restoreSession` in `_app` (replaces 5 copies in `Top` and the layouts), `sessionReadyVar`, cross-tab login / logout sync, `verifySession` via `CHECK_AUTH` |
+| `apollo/client.ts` | `UNAUTHENTICATED` → log out once with one alert; dead `TokenRefreshLink` and the per-request `console.warn` removed |
+| `/mypage` | Redirects only after the session is ready, so a reload no longer jumps to `/` |
+
+Still one 30-day access token; there is no refresh token flow (see `NEXT_STEPS.md`).
+
+## 21. Navano AI: commit and dock (2026-10-15)
+
+- Backend `ee9733e`: the §19 assistant committed.
+- Frontend `255fdca`, `98c00ef`: the "Navano AI" pill keeps its look and text. It is `position: fixed` at the right edge of the navbar (`top: 20px; right: 16px`), the navbar reserves space for it, and the panel opens under it (`top: 92px`). `assistantOpenVar` and `chatOpenVar` keep only one panel open at a time. On phones the pill shows only its icon, and the panels take the screen width minus 16 px.
+- The `ANTHROPIC_API_KEY` in the local `.env` is not a valid Anthropic key (the API answers 401), so real replies are still untested.
+
+## 22. CS API and CS pages (2026-10-15, D13)
+
+### Backend (`1130020`)
+
+| Area | Change |
+|---|---|
+| `components/notice/*` | Public `getNotices(category, text, page)`, `getNotice(id)` (ACTIVE only); admin `createNotice`, `updateNotice`, `removeNotice`, `getAllNoticesByAdmin`. `NoticeCategory` = `NOTICE / FAQ / TERMS`, `NoticeTopic` (GENERAL, EVENT, POLICY, …); FAQ uses title = question, content = answer |
+| `schemas/Inquiry.model.ts`, `components/inquiry/*` | 1:1 inquiries: `createInquiry`, `getMyInquiries`, `removeInquiry` (owner, only while WAIT); admin `getAllInquiriesByAdmin` (status filter, optional sort) and `answerInquiryByAdmin`. Types `ORDER / PRODUCT / STORE / ACCOUNT / OTHER`, status `WAIT / ANSWERED / DELETE` |
+| `scripts/seed-cs.mjs` | Loads the former static notices, FAQ and terms from the client into `notices` as the admin |
+| Tests | `notice.service.spec.ts`, `inquiry.service.spec.ts` |
+
+### Frontend (`1e4a2e2`)
+
+- `/cs`: Notice, FAQ and Terms read from the API (static arrays removed); new Inquiry tab with a form and "My inquiries" with answers; logged-out visitors see a log-in prompt.
+- Admin `/_admin/cs/notice`, `faq`, `inquiry`: list, create / edit dialogs, status toggle, delete; the inquiry inbox has WAIT / ANSWERED tabs and an answer dialog.
+- i18n keys must not contain `:` (the next-i18next namespace separator broke hydration on "1:1 Inquiry").
+
+## 23. Notifications (2026-10-15, D14)
+
+- Backend `b29d988`: `components/notification/*`. `NotificationService` writes a notification on product / member / article likes, comments and follows (`NotificationType.FOLLOW` added). It skips self-actions and withdraws a like notification when the like is undone. Auth queries `getNotifications`, `getUnreadNotifications` (count); mutations `readNotifications(ids)`, `readAllNotifications`. Tests in `notification.service.spec.ts`.
+- Frontend `255fdca`: `NotificationBell` in the navbar with an unread badge, polling every 30 s while logged in and the tab is visible. The dropdown shows avatar, text, time, a link to the target, and "Mark all as read".
+
+## 24. Admin dashboard (2026-10-15)
+
+- Backend `a1eeb8e`: `getAdminStats` (`@Roles(ADMIN)`) with members by type and status, products by status and type, articles, waiting inquiries, and new items in the last 7 days. Tests in `dashboard.service.spec.ts`.
+- Frontend `255fdca`: `/_admin` shows stat cards, links to the lists and the latest waiting inquiries instead of a redirect.
+
+## 25. Responsive layout (2026-10-15, D15)
+
+- `4759b28`: the `device === 'mobile'` stub branches are removed; every page renders the one `#pc-wrap` layout, and `scss/mobile/main.scss` is no longer imported. Same commit: leftovers removed (`mypage/Article.tsx`, the `properties.png` banner), `MyProfile` saves without a photo, hard-coded colours → `--nv-*` for dark mode.
+- `scss/pc/responsive.scss` (imported last): tablet `≤1023px`, phone `≤767px`, small `≤480px`. Sidebars go above the content, card grids go to 2 and then 1 column, toolbars and action rows wrap, and admin tables and tabs scroll inside their cards. Admin: the side rail slides in below 1024px.
+- Navbar: drawer with links, language and theme at `≤1180px`; the brand text is hidden at `≤420px`.
+- `797a34b`: toolbar, banner and action-row fixes for stores, community, about, My Page, admin and the CS notice table.
+
+Validation: no page-level horizontal overflow at 390px (14 pages) and 768px (12 pages), `/cs` also at 1024px (headless Chrome).
+
+## 26. Demo data, events and smaller fixes (2026-10-15)
+
+### Backend
+
+| Commit | Change |
+|---|---|
+| `ccd06b1` | `imageUploader` / `imagesUploader` accept only `member`, `product`, `article` as the target and create the folder on demand; failures return `Message.UPLOAD_FAILED` |
+| `024dd0a`, `9e43591`, `ca17227` | `scripts/seed-demo.mjs` + `.data.json`: 6 stores, 6 customers, every customer follows 3 stores (3 followers per store), products with the user's photos (`DEMO_IMAGES` folder), store covers, and store avatars from a product photo (`avatarProduct`). `scripts/seed-articles.mjs` + `.data.json`: 2 FREE articles per store with a product photo as the cover. Both read `DEMO_PASSWORD` from the env and are safe to run again |
+
+The old FREE articles were removed from the dev DB. Photos stay outside git (`D:\MiT\MOD2\images`); the image with a third-party brand logo is not used.
+
+### Frontend
+
+| Commit | Change |
+|---|---|
+| `c517433` | Community editor uploads to the `article` folder with type and size checks; the first image becomes the cover |
+| `623f5a8` | Home Events: 4 cards (cakes, chocolates, wedding, party) with the user's photos in `public/img/events/` |
+| `3ddfd9f` | The language button follows `router.locale`; the price filter leaves an open-ended max price empty ("Any") |
+
+Validation for the session: api tsc 0, jest 36 passed, eslint below the 397 baseline; client `tsc --noEmit` 0; 53 / 53 Apollo operations validate against the live schema.
 
