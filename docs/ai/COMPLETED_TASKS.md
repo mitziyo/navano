@@ -492,3 +492,14 @@ Validation for the session: api tsc 0, jest 36 passed, eslint below the 397 base
 | Headless Chrome | `/mypage` hard load with an expired token: one `RefreshToken` request, new token stored, page stays on `/mypage`; a guest page load sends no `RefreshToken` |
 
 A test member `rt033274` (USER) was created in the dev DB for the live check.
+
+
+## 28. Link previews in `_document` (2026-10-15)
+
+| Area | Change |
+|---|---|
+| `pages/_document.tsx` | Open Graph tags (`og:type`, `og:site_name`, `og:title`, `og:description`, `og:url`, `og:image` with size / type / alt, `og:locale` en_US + ko_KR / ru_RU alternates), `twitter:card` `summary` (square image), `theme-color` `#e11d48`. Fixes from Nestar: `keyword` → `keywords`, favicon `type` → `image/svg+xml` |
+| `public/img/og/navano-share.jpg` (new) | 1024×1024 share image (white daisy basket), kept square |
+| `REACT_APP_SITE_URL` | New env value (`.env.development`, exposed in `next.config.js`); `_document` falls back to `http://localhost:3000`. Set it to the public domain once one exists — previews do not render from localhost |
+
+Validation: client `yarn tsc --noEmit` 0; the dev server's `/` HTML carries the tags; `/img/og/navano-share.jpg` → 200.
