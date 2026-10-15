@@ -61,8 +61,8 @@ const exists = (file) =>
 		() => false,
 	);
 
-const LOGIN = 'mutation Login($input: LoginInput!) { login(input: $input) { _id accessToken memberCover memberAddress } }';
-const SIGNUP = 'mutation Signup($input: MemberInput!) { signup(input: $input) { _id accessToken memberCover memberAddress } }';
+const LOGIN = 'mutation Login($input: LoginInput!) { login(input: $input) { _id accessToken memberCover memberImage memberAddress } }';
+const SIGNUP = 'mutation Signup($input: MemberInput!) { signup(input: $input) { _id accessToken memberCover memberImage memberAddress } }';
 const UPDATE = 'mutation Update($input: MemberUpdate!) { updateMember(input: $input) { _id } }';
 const FOLLOW = 'mutation Follow($id: String!) { subscribe(input: $id) { _id } }';
 const STORE_TITLES =
@@ -88,8 +88,8 @@ const session = async (member) => {
 
 const accounts = {};
 for (const member of [...data.stores, ...data.customers]) {
-	const { _id, accessToken, memberCover, memberAddress } = await session(member);
-	accounts[member.nick] = { _id, token: accessToken, cover: memberCover, address: member.address ?? memberAddress, member };
+	const { _id, accessToken, memberCover, memberImage, memberAddress } = await session(member);
+	accounts[member.nick] = { _id, token: accessToken, cover: memberCover, image: memberImage, address: member.address ?? memberAddress, member };
 	// Profile texts only for the members this file defines
 	if (member.fullName) {
 		await gql(
@@ -165,6 +165,16 @@ if (!IMAGES) {
 		const [memberCover] = await upload([file], 'member', account.token);
 		await gql(UPDATE, { input: { _id: account._id, memberCover } }, account.token);
 		console.log(`+ cover ${store.nick}`);
+	}
+
+	// Avatar = a square product photo of the store, set only when the store has no photo yet
+	for (const store of data.stores.filter((item) => item.avatar)) {
+		const account = accounts[store.nick];
+		const file = path.join(IMAGES, store.avatar);
+		if (account.image || !(await exists(file))) continue;
+		const [memberImage] = await upload([file], 'member', account.token);
+		await gql(UPDATE, { input: { _id: account._id, memberImage } }, account.token);
+		console.log(`+ avatar ${store.nick}`);
 	}
 }
 

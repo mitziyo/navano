@@ -23,7 +23,8 @@
 			"fullName": "Suseong Petal Atelier",
 			"address": "Suseong-ro, Suseong-gu, Daegu",
 			"desc": "Seasonal hand-tied bouquets and wedding flowers from a small atelier by Suseong Lake. Same-day delivery across Daegu.",
-			"cover": "aeb818d7482f0d88827625e3757b62ff.jpg"
+			"cover": "aeb818d7482f0d88827625e3757b62ff.jpg",
+			"avatar": "31c2f4a6ed5678ffe8a49e0125881cf2.jpg"
 		},
 		{
 			"nick": "DANIEL",
@@ -32,7 +33,8 @@
 			"fullName": "Jeju Tangerine Bakery",
 			"address": "Aewol-eup, Jeju-si, Jeju",
 			"desc": "Celebration cakes baked with Jeju tangerines, green tea and local cream. Custom lettering for birthdays and anniversaries.",
-			"cover": "cffed2542b35cd3c551e41f9aafb3a80.jpg"
+			"cover": "cffed2542b35cd3c551e41f9aafb3a80.jpg",
+			"avatar": "8a1dae8504fdb98b8aa5e6c7244e9604.jpg"
 		}
 	],
 	"customers": [

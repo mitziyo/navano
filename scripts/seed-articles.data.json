@@ -1,0 +1,74 @@
+[
+	{
+		"store": "RAY",
+		"title": "How we build a hand-tied bouquet",
+		"content": "<p>We strip the lower leaves, cut each stem at an angle under water and spiral the flowers in one hand. Greens go in first, focal roses last, then we tie it loosely so the stems can drink.</p>",
+		"coverProduct": "Daisy & Baby's Breath Bouquet"
+	},
+	{
+		"store": "RAY",
+		"title": "Keeping cut flowers fresh for a week",
+		"content": "<p>Recut the stems every two days, change the water and keep the vase away from fruit and heaters. A drop of flower food and cool nights add three to four days to most bouquets.</p>",
+		"coverProduct": "White Peony & Lily Centerpiece"
+	},
+	{
+		"store": "KEVIN",
+		"title": "Putting together a gift hamper",
+		"content": "<p>We start with one hero item, a cake or a bouquet, then add chocolates and a card that match its colours. Everything is wrapped on the morning of delivery so nothing melts or wilts.</p>",
+		"coverProduct": "Peach Rose Bouquet"
+	},
+	{
+		"store": "KEVIN",
+		"title": "Chocolate-dipped strawberries at home",
+		"content": "<p>Dry the berries completely, melt dark chocolate gently to about 31°C, dip and set them on parchment. Ten minutes in the fridge and they are ready, best eaten the same day.</p>",
+		"coverProduct": "Chocolate Truffle Gift Box"
+	},
+	{
+		"store": "RYAN",
+		"title": "Our chocolate ganache cake, step by step",
+		"content": "<p>Three cocoa sponges rest overnight, then we fill them with whipped ganache, chill the cake and pour a glossy ganache at 35°C. Chocolate pieces and the message go on just before pickup.</p>",
+		"coverProduct": "Chocolate Ganache Birthday Cake"
+	},
+	{
+		"store": "RYAN",
+		"title": "Why our red velvet stays moist",
+		"content": "<p>Buttermilk, a little vinegar and oil instead of only butter keep the crumb soft. We bake at a lower heat and frost with cream cheese only after the cupcakes cool completely.</p>",
+		"coverProduct": "Red Velvet Cupcakes (6 pcs)"
+	},
+	{
+		"store": "NATHAN",
+		"title": "From cacao bean to truffle",
+		"content": "<p>We roast single-origin beans, crack and winnow them, then grind for two days. The chocolate is tempered on marble, filled with ganache and hand-rolled into truffles.</p>",
+		"coverProduct": "Single-Origin Bonbon Collection"
+	},
+	{
+		"store": "NATHAN",
+		"title": "Tempering chocolate for a perfect snap",
+		"content": "<p>Melt dark chocolate to 45°C, cool it to 27°C while stirring, then warm it back to 31°C. Tempered chocolate sets glossy, snaps cleanly and does not melt in your hand.</p>",
+		"coverProduct": "Dark Chocolate Cupcakes (6 pcs)"
+	},
+	{
+		"store": "SOFIA",
+		"title": "Designing a bridal bouquet",
+		"content": "<p>We meet the couple, match flowers to the dress and season, then build a round dome of carnations and baby's breath. The stems are wrapped in silk ribbon on the wedding morning.</p>",
+		"coverProduct": "White Carnation Bridal Bouquet"
+	},
+	{
+		"store": "SOFIA",
+		"title": "Choosing flowers by season in Daegu",
+		"content": "<p>Spring brings peonies and tulips, summer daisies and lisianthus, autumn garden roses, winter carnations. Seasonal flowers last longer and cost less, so we build bouquets around them.</p>",
+		"coverProduct": "Blush Garden Bouquet"
+	},
+	{
+		"store": "DANIEL",
+		"title": "Baking with Jeju green tea",
+		"content": "<p>We whisk Jeju matcha into the sponge and the cream, keep the sugar low so the tea stays bright, and finish with a dark chocolate drip that balances the bitterness.</p>",
+		"coverProduct": "Jeju Green Tea Drip Cake"
+	},
+	{
+		"store": "DANIEL",
+		"title": "Making a pistachio celebration cake",
+		"content": "<p>Roasted pistachios are ground into a paste for the cream, the cake gets a white chocolate drip, piped rosettes and a crown of whole nuts. Order two days ahead for weddings.</p>",
+		"coverProduct": "Pistachio Cream Celebration Cake"
+	}
+]
