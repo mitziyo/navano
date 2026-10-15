@@ -13,12 +13,15 @@ import {
 } from '../../libs/config';
 import { FollowInquiry } from '../../libs/dto/follow/follow.input';
 import { T } from '../../libs/types/common';
+import { NotificationService } from '../notification/notification.service';
+import { NotificationGroup, NotificationType } from '../../libs/enums/notification.enum';
 
 @Injectable()
 export class FollowService {
 	constructor(
 		@InjectModel('Follow') private readonly followModel: Model<Follower | Following>,
 		private memberService: MemberService,
+		private notificationService: NotificationService,
 	) {}
 
 	public async subscribe(followerId: ObjectId, followingId: ObjectId): Promise<Follower> {
@@ -33,6 +36,14 @@ export class FollowService {
 
 		await this.memberService.memberStatsEditor({ _id: followerId, targetKey: 'memberFollowings', modifier: 1 });
 		await this.memberService.memberStatsEditor({ _id: followingId, targetKey: 'memberFollowers', modifier: 1 });
+
+		await this.notificationService.notify({
+			notificationType: NotificationType.FOLLOW,
+			notificationGroup: NotificationGroup.MEMBER,
+			notificationTitle: targetMember.memberNick,
+			authorId: followerId,
+			receiverId: followingId,
+		});
 
 		return result;
 	}

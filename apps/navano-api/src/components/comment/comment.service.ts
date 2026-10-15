@@ -11,11 +11,14 @@ import { CommentUpdate } from '../../libs/dto/comment/comment.update';
 import { Comment, Comments } from '../../libs/dto/comment/comment';
 import { lookupMember } from '../../libs/config';
 import { T } from '../../libs/types/common';
+import { NotificationService } from '../notification/notification.service';
+import { NotificationGroup, NotificationType } from '../../libs/enums/notification.enum';
 
 @Injectable()
 export class CommentService {
 	constructor(
 		@InjectModel('Comment') private readonly commentModel: Model<Comment>,
+		private readonly notificationService: NotificationService,
 		private readonly memberService: MemberService,
 		private readonly productService: ProductService,
 		private readonly boardArticleService: BoardArticleService,
@@ -32,28 +35,60 @@ export class CommentService {
 			throw new BadRequestException(Message.CREATE_FAILED);
 		}
 
+		// The stats editors return the updated target, which tells us whom to notify
+		const notice = {
+			notificationType: NotificationType.COMMENT,
+			authorId: memberId,
+			notificationDesc: input.commentContent,
+		};
 		switch (input.commentGroup) {
-			case CommentGroup.PRODUCT:
-				await this.productService.productStatsEditor({
+			case CommentGroup.PRODUCT: {
+				const product = await this.productService.productStatsEditor({
 					_id: input.commentRefId,
 					targetKey: 'productComments',
 					modifier: 1,
 				});
+				if (product)
+					await this.notificationService.notify({
+						...notice,
+						notificationGroup: NotificationGroup.PRODUCT,
+						notificationTitle: product.productTitle,
+						receiverId: product.memberId,
+						productId: input.commentRefId,
+					});
 				break;
-			case CommentGroup.ARTICLE:
-				await this.boardArticleService.boardArticleStatsEditor({
+			}
+			case CommentGroup.ARTICLE: {
+				const article = await this.boardArticleService.boardArticleStatsEditor({
 					_id: input.commentRefId,
 					targetKey: 'articleComments',
 					modifier: 1,
 				});
+				if (article)
+					await this.notificationService.notify({
+						...notice,
+						notificationGroup: NotificationGroup.ARTICLE,
+						notificationTitle: article.articleTitle,
+						receiverId: article.memberId,
+						articleId: input.commentRefId,
+					});
 				break;
-			case CommentGroup.MEMBER:
-				await this.memberService.memberStatsEditor({
+			}
+			case CommentGroup.MEMBER: {
+				const member = await this.memberService.memberStatsEditor({
 					_id: input.commentRefId,
 					targetKey: 'memberComments',
 					modifier: 1,
 				});
+				if (member)
+					await this.notificationService.notify({
+						...notice,
+						notificationGroup: NotificationGroup.MEMBER,
+						notificationTitle: member.memberNick,
+						receiverId: input.commentRefId,
+					});
 				break;
+			}
 		}
 
 		if (!result) throw new InternalServerErrorException(Message.CREATE_FAILED);

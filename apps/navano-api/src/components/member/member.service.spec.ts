@@ -3,6 +3,7 @@ import { MemberService } from './member.service';
 import type { AuthService } from '../auth/auth.service';
 import type { ViewService } from '../view/view.service';
 import type { LikeService } from '../like/like.service';
+import type { NotificationService } from '../notification/notification.service';
 import type { Member } from '../../libs/dto/member/member';
 import type { Follower, Following } from '../../libs/dto/follow/follow';
 import { ProductLocation, ProductType } from '../../libs/enums/product.enum';
@@ -19,6 +20,8 @@ describe('MemberService', () => {
 	let findOne: jest.Mock;
 	let findOneAndUpdate: jest.Mock;
 	let toggleLike: jest.Mock;
+	let notify: jest.Mock;
+	let withdrawLike: jest.Mock;
 	let service: MemberService;
 
 	beforeEach(() => {
@@ -26,12 +29,15 @@ describe('MemberService', () => {
 		findOne = jest.fn().mockReturnValue({ exec: () => Promise.resolve({ _id: storeId }) });
 		findOneAndUpdate = jest.fn().mockReturnValue({ exec: () => Promise.resolve({ _id: storeId, memberLikes: 1 }) });
 		toggleLike = jest.fn();
+		notify = jest.fn();
+		withdrawLike = jest.fn();
 		service = new MemberService(
 			{ aggregate, findOne, findOneAndUpdate } as unknown as Model<Member>,
 			{} as unknown as Model<Follower | Following>,
 			{} as unknown as AuthService,
 			{} as unknown as ViewService,
 			{ toggleLike } as unknown as LikeService,
+			{ notify, withdrawLike } as unknown as NotificationService,
 		);
 	});
 
@@ -91,6 +97,27 @@ describe('MemberService', () => {
 			toggleLike.mockResolvedValueOnce(-1);
 			const unliked = await service.likeTargetMember(memberId, storeId);
 			expect(unliked.meLiked).toEqual([]);
+		});
+
+		it('notifies the store on a like and withdraws the notification on an unlike', async () => {
+			toggleLike.mockResolvedValueOnce(1);
+			await service.likeTargetMember(memberId, storeId);
+			expect(notify).toHaveBeenCalledWith(
+				expect.objectContaining({
+					notificationType: 'LIKE',
+					notificationGroup: 'MEMBER',
+					authorId: memberId,
+					receiverId: storeId,
+				}),
+			);
+
+			toggleLike.mockResolvedValueOnce(-1);
+			await service.likeTargetMember(memberId, storeId);
+			expect(withdrawLike).toHaveBeenCalledWith({
+				notificationGroup: 'MEMBER',
+				authorId: memberId,
+				receiverId: storeId,
+			});
 		});
 	});
 });

@@ -4,6 +4,7 @@ import { ProductService } from './product.service';
 import type { MemberService } from '../member/member.service';
 import type { ViewService } from '../view/view.service';
 import type { LikeService } from '../like/like.service';
+import type { NotificationService } from '../notification/notification.service';
 import type { Product } from '../../libs/dto/product/product';
 import { ProductLocation, ProductOccasion, ProductStatus, ProductType } from '../../libs/enums/product.enum';
 import { ProductsInquiry } from '../../libs/dto/product/product.input';
@@ -33,6 +34,7 @@ describe('ProductService', () => {
 			{ memberStatsEditor } as unknown as MemberService,
 			{} as unknown as ViewService,
 			{} as unknown as LikeService,
+			{ notify: jest.fn(), withdrawLike: jest.fn() } as unknown as NotificationService,
 		);
 	});
 

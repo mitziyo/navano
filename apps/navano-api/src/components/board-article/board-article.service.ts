@@ -17,6 +17,8 @@ import { ViewGroup } from '../../libs/enums/view.enum';
 import { StatisticModifier, T } from '../../libs/types/common';
 import { lookupAuthMemberLiked, lookupMember, shapeIntoMongoObjectId, escapeRegex } from '../../libs/config';
 import { LikeService } from '../like/like.service';
+import { NotificationService } from '../notification/notification.service';
+import { NotificationGroup, NotificationType } from '../../libs/enums/notification.enum';
 import { LikeInput } from '../../libs/dto/like/like.input';
 import { LikeGroup } from '../../libs/enums/like.enum';
 
@@ -27,6 +29,7 @@ export class BoardArticleService {
 		private memberService: MemberService,
 		private viewService: ViewService,
 		private likeService: LikeService,
+		private notificationService: NotificationService,
 	) {}
 
 	public async createBoardArticle(memberId: ObjectId, input: BoardArticleInput): Promise<BoardArticle> {
@@ -191,6 +194,20 @@ export class BoardArticleService {
 		};
 
 		const modifier: number = await this.likeService.toggleLike(input);
+
+		const notice = {
+			notificationGroup: NotificationGroup.ARTICLE,
+			authorId: memberId,
+			receiverId: target.memberId,
+			articleId: likeRefId,
+		};
+		if (modifier > 0)
+			await this.notificationService.notify({
+				...notice,
+				notificationType: NotificationType.LIKE,
+				notificationTitle: target.articleTitle,
+			});
+		else await this.notificationService.withdrawLike(notice);
 
 		const result = await this.boardArticleStatsEditor({
 			_id: likeRefId,

@@ -20,6 +20,8 @@ import { ProductUpdate } from '../../libs/dto/product/product.update';
 import moment from 'moment';
 import { lookupAuthMemberLiked, lookupMember, shapeIntoMongoObjectId, escapeRegex } from '../../libs/config';
 import { LikeService } from '../like/like.service';
+import { NotificationService } from '../notification/notification.service';
+import { NotificationGroup, NotificationType } from '../../libs/enums/notification.enum';
 import { LikeInput } from '../../libs/dto/like/like.input';
 import { LikeGroup } from '../../libs/enums/like.enum';
 
@@ -31,6 +33,7 @@ export class ProductService {
 		private memberService: MemberService,
 		private viewService: ViewService,
 		private likeService: LikeService,
+		private notificationService: NotificationService,
 	) {}
 
 	public async createProduct(input: ProductInput): Promise<Product> {
@@ -253,6 +256,20 @@ export class ProductService {
 		};
 
 		const modifier: number = await this.likeService.toggleLike(input);
+
+		const notice = {
+			notificationGroup: NotificationGroup.PRODUCT,
+			authorId: memberId,
+			receiverId: target.memberId,
+			productId: likeRefId,
+		};
+		if (modifier > 0)
+			await this.notificationService.notify({
+				...notice,
+				notificationType: NotificationType.LIKE,
+				notificationTitle: target.productTitle,
+			});
+		else await this.notificationService.withdrawLike(notice);
 
 		const result = await this.productStatsEditor({
 			_id: likeRefId,

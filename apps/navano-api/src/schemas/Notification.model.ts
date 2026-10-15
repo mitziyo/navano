@@ -55,4 +55,8 @@ const NotificationSchema = new Schema(
 	{ timestamps: true, collection: 'notifications' },
 );
 
+// The bell reads a member's newest notifications and counts the unread ones
+NotificationSchema.index({ receiverId: 1, createdAt: -1 });
+NotificationSchema.index({ receiverId: 1, notificationStatus: 1 });
+
 export default NotificationSchema;
