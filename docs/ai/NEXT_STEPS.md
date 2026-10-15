@@ -6,18 +6,7 @@ Updated 2026-10-15. Phase 2 (Product), the client migration, CS, notifications, 
 | # | Task | Notes |
 |---|---|---|
 | 1 | **Rotate the MongoDB Atlas password** | The `.env` value was exposed in a session transcript |
-| 2 | Valid `ANTHROPIC_API_KEY` | The current local value is not an Anthropic key (401), so Navano AI answers "unavailable" |
-
-## Deploy preparation
-| # | Task | Notes |
-|---|---|---|
-| 1 | `start:prod:batch` | Add `NODE_ENV=production` like `start:prod` |
-| 2 | CORS whitelist | Allow only the client domain |
-| 3 | GraphQL playground / introspection | Off in production |
-| 4 | Guard `console.log`s | Remove the debug logs in the auth / roles / without guards |
-| 5 | Builds | `nest build` for both apps; `yarn build` for the client (only while `yarn dev` is stopped) |
-| 6 | Server | PM2 for api + batch, nginx reverse proxy (HTTP + WebSocket), env on the server, `uploads/` on persistent storage. Needs the server, domain and DB details from the user |
-| 7 | Link previews | OG / Twitter tags with absolute image URLs once a public domain exists |
+| 2 | Old `ANTHROPIC_API_KEY` | Unused since D17; delete the line from `navano/.env` |
 
 ## Features
 | # | Task | Notes |
@@ -25,8 +14,7 @@ Updated 2026-10-15. Phase 2 (Product), the client migration, CS, notifications, 
 | 1 | Orders and cart (Phase 3, D9) | Payment, stock, delivery scheduling |
 | 2 | Square store avatars | `AGENT` avatars as a rounded square (logo style) in store cards, store page, navbar and comments; customers keep the round avatar |
 | 3 | Avatar hint for stores | Next to the photo upload on My Page: "Upload your logo or a signature product photo" (i18n `en` / `kr` / `ru`) |
-| 4 | Navano AI provider | Optional switch from Claude to Gemini was discussed, not decided (D12 stands until then) |
-| 5 | Notifications over WebSocket | Optional, replaces the 30 s polling (D14) |
+| 4 | Notifications over WebSocket | Optional, replaces the 30 s polling (D14) |
 
 ## Backend cleanup
 | # | Task | Notes |
@@ -42,7 +30,7 @@ Updated 2026-10-15. Phase 2 (Product), the client migration, CS, notifications, 
 | 2 | E2e flow: signup AGENT → createProduct → USER like → owner gets a notification → createComment → inquiry → admin answer |
 | 3 | Batch: unit-test the rank formulas |
 | 4 | WebSocket chat connect with and without token |
-| 5 | Real Navano AI replies once a valid key is set |
+| 5 | Navano AI in the browser chat panel (API-level replies checked on 2026-10-15) |
 
 ## Documentation
 | # | Task |

@@ -15,11 +15,12 @@ Format: Decision / Why / Risks / Alternatives considered. Status shows whether t
 | D9 | Defer Order/Cart to Phase 3 | Agreed |
 | D10 | Use a fresh dev DB for Phase 2 instead of migrating data | Recommended |
 | D11 | `navanoo.pdf` data model is the schema source of truth | Agreed |
-| D12 | Navano AI uses the Claude API from `navano-api` only | Applied |
+| D12 | Navano AI uses the Claude API from `navano-api` only | Replaced by D17 (provider); server-only rule kept |
 | D13 | CS content in `notices` by category, 1:1 inquiries in their own collection | Applied |
 | D14 | Notifications are written by the services and read by polling | Applied |
 | D15 | One responsive layout instead of separate mobile pages | Applied |
 | D16 | 15-minute access token + rotating httpOnly refresh cookie | Applied |
+| D17 | Navano AI runs on the Gemini API free tier | Applied |
 
 ---
 
@@ -102,3 +103,8 @@ Format: Decision / Why / Risks / Alternatives considered. Status shows whether t
 - **Why:** A stolen 30-day token could not be revoked (the first version of D16, 2026-10-14). Since 2026-10-15 the access token lives 15 minutes. `login` / `signup` also set the `nv_rt` cookie (httpOnly, `sameSite: lax`, `secure` in production, `path: /graphql`, 30 days). `refreshToken` uses the cookie once: the session is deleted and a new cookie is set (rotation). `logout` deletes the session. Sessions live in `sessions` (sha256 hash of the token, TTL index), one per device. The guards are unchanged: they still read the `Authorization` header.
 - **Risks:** An access token that leaks stays valid for up to 15 minutes. The WebSocket token is checked only on connect. The client and API must stay same-site (`localhost` ↔ `localhost`, or one domain in production), or the `lax` cookie is not sent.
 - **Alternatives:** Refresh token in `localStorage` (readable by any XSS); one session field on the member (logs out the other devices).
+
+### D17. Navano AI runs on the Gemini API free tier
+- **Why:** The user needs a free AI (2026-10-15). A Google AI Studio key has a free tier without a card and supports function calling, so the D12 design stays: the key lives only in `navano-api`, one `askAssistant` mutation, the same three tools, system prompt, hourly limit and product cards. Only the provider call changed (`@google/genai`; `@anthropic-ai/sdk` removed). Env: `GEMINI_API_KEY`, optional `GEMINI_MODEL`. Default model `gemini-flash-lite-latest` (on 2026-10-15 it pointed to `gemini-3.5-flash-lite`): the free tier allows only 5 requests per minute per model on Flash (`gemini-3.8-flash`), and one reply can take up to 5 requests (4 tool rounds + answer), so Flash ran out after one question.
+- **Risks:** Free-tier quotas are small and set per Google project (a 429 shows "Navano AI is not available right now" and is not retried; 5xx "high demand" answers are retried twice); free-tier prompts may be used by Google to improve its models, and the free tier may exclude commercial use, so a paid key is needed before a real launch. The alias can move to a newer model that behaves differently; pin a model in `GEMINI_MODEL` if that matters.
+- **Alternatives:** Keep Claude (`claude-haiku-5-5` is the cheap option, but paid); Groq / OpenRouter free models (weaker tool calling, extra vendor); a local model via Ollama (no key, but needs a strong machine and a running server).

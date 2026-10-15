@@ -503,3 +503,28 @@ A test member `rt033274` (USER) was created in the dev DB for the live check.
 | `REACT_APP_SITE_URL` | New env value (`.env.development`, exposed in `next.config.js`); `_document` falls back to `http://localhost:3000`. Set it to the public domain once one exists — previews do not render from localhost |
 
 Validation: client `yarn tsc --noEmit` 0; the dev server's `/` HTML carries the tags; `/img/og/navano-share.jpg` → 200.
+
+
+## 29. Navano AI on Gemini (2026-10-15, D17)
+
+| Area | Change |
+|---|---|
+| `assistant.service.ts` | Claude Messages loop → Gemini `models.generateContent` loop: tools as `functionDeclarations` (same JSON schemas), history as `contents` (`assistant` → `model`), the model turn is sent back unchanged (thought signatures), tool results as `functionResponse` parts with the call `id`; blocked prompts / `SAFETY`-type finishes return the fixed refusal text; `ApiError` (429 logged as a rate limit) → `ASSISTANT_UNAVAILABLE`; 5xx retried twice (`retryOptions`), 429 not retried; the last round sends `functionCallingConfig.mode: NONE` so the model must answer in text. Model `process.env.GEMINI_MODEL || 'gemini-flash-lite-latest'`. Prompt rule: product and store names are written exactly as the tools return them (Flash-Lite had written Korean store names in katakana) |
+| `assistant.service.spec.ts` | Mocks `client.models.generateContent`; checks the thought signature and the `functionResponse` id round trip, and that tools are off in the last round |
+| Dependencies | `@google/genai` ^2.30.0 added, `@anthropic-ai/sdk` removed |
+| Env | `.env.example`: `GEMINI_API_KEY`, `GEMINI_MODEL`; the user put the key in the local `.env` |
+| Unchanged | GraphQL `askAssistant`, the client chat panel, tools, system prompt, 20 requests per member per hour |
+
+Validation: api / batch `tsc --noEmit` 0 / 0; `jest apps/navano-api/src` 41 passed; eslint on `components/assistant` 0.
+
+Live check (a second API instance on port 3017, signup + `askAssistant`):
+
+| Question | Result |
+|---|---|
+| Birthday flowers in Seoul under $100 | 3 `search_products` rounds (BIRTHDAY had no match, widened), English answer with 4 Seoul bouquet cards |
+| 어떤 케이크 가게가 있어요? | `search_stores` (CAKE), Korean answer with the original store names |
+| Какие у вас есть шоколады? | `search_products` (CHOCOLATE), Russian answer with 3 cards |
+| Anniversary chocolates in Busan | English answer with 2 Busan cards |
+| Write me a Python script | Polite off-topic decline, no cards |
+
+Findings that shaped the code: `gemini-flash-latest` hit 429 (5 requests per minute free-tier quota) after one question and once answered 503 "high demand"; replies take about 8–18 s. Test members `ai712652`, `ai744497`, `ai827930`, `ai900614`, `ai001748` (USER) were created in the dev DB.
