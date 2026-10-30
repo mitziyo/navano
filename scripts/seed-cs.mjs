@@ -1,11 +1,11 @@
 // One-off seed: loads the CS notices and FAQ (formerly static in navano-client csContent.ts)
 // into the `notices` collection through the GraphQL API, as an admin.
 //
-// Usage: ADMIN_NICK=... ADMIN_PASSWORD=... node scripts/seed-cs.mjs [http://localhost:3007/graphql]
+// Usage: ADMIN_NICK=... ADMIN_PASSWORD=... node scripts/seed-cs.mjs [http://localhost:5070/graphql]
 // Skips everything when the API already has notices or FAQ, so it is safe to run twice.
 import { readFile } from 'node:fs/promises';
 
-const API = process.argv[2] ?? 'http://localhost:3007/graphql';
+const API = process.argv[2] ?? 'http://localhost:5070/graphql';
 const { ADMIN_NICK, ADMIN_PASSWORD } = process.env;
 if (!ADMIN_NICK || !ADMIN_PASSWORD) {
 	console.error('Set ADMIN_NICK and ADMIN_PASSWORD');

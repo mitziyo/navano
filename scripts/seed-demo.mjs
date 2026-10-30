@@ -2,13 +2,13 @@
 // 1. stores, customers, their profiles and follows
 // 2. products with photos, and cover photos for the stores that have one listed
 //
-// Usage: DEMO_PASSWORD=... DEMO_IMAGES=<folder with the photos> node scripts/seed-demo.mjs [http://localhost:3007/graphql]
+// Usage: DEMO_PASSWORD=... DEMO_IMAGES=<folder with the photos> node scripts/seed-demo.mjs [http://localhost:5070/graphql]
 // Safe to run again: existing members log in, existing follows and products (same store + title) are skipped.
 // Products whose photo file is missing are skipped with a warning, so they can be added on a later run.
 import { readFile, access } from 'node:fs/promises';
 import path from 'node:path';
 
-const API = process.argv[2] ?? 'http://localhost:3007/graphql';
+const API = process.argv[2] ?? 'http://localhost:5070/graphql';
 const PASSWORD = process.env.DEMO_PASSWORD;
 const IMAGES = process.env.DEMO_IMAGES;
 if (!PASSWORD) {

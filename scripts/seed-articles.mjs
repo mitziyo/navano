@@ -1,11 +1,11 @@
 // Demo community articles: every store writes about how it makes its flowers, chocolates or cakes.
 // Each article is posted by the store's own account on the FREE board; the cover is the photo of the product named in coverProduct (else the store's first product).
 //
-// Usage: DEMO_PASSWORD=... node scripts/seed-articles.mjs [http://localhost:3007/graphql]
+// Usage: DEMO_PASSWORD=... node scripts/seed-articles.mjs [http://localhost:5070/graphql]
 // Safe to run again: an article with the same title by the same store is not created twice (only its cover is synced).
 import { readFile } from 'node:fs/promises';
 
-const API = process.argv[2] ?? 'http://localhost:3007/graphql';
+const API = process.argv[2] ?? 'http://localhost:5070/graphql';
 const PASSWORD = process.env.DEMO_PASSWORD;
 if (!PASSWORD) {
 	console.error('Set DEMO_PASSWORD (the password of the store accounts)');
